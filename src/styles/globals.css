@@ -52,6 +52,16 @@
     --glass-border: rgba(255, 255, 255, 0.3);
     --glass-blur: blur(12px);
 
+    /* Typography Scale */
+    --font-h1: 2rem;
+    --font-h2: 1.5rem;
+    --font-h3: 1.25rem;
+    --font-body: 1rem;
+    --font-small: 0.875rem;
+    --font-xs: 0.75rem;
+
+    /* Breakpoints */
+
     /* Breakpoints */
     --breakpoint-md: 768px;
     --breakpoint-lg: 1024px;
@@ -70,6 +80,10 @@ body {
     color: var(--text-main);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+
+    /* Prevent horizontal overflow and default touch behaviors for app-like feel */
+    overflow-x: hidden;
+    touch-action: pan-x pan-y;
 }
 
 h1,
