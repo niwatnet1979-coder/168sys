@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { X, User, MapPin, FileText, Plus, Trash2, Save, Users, Sparkles, Globe, ChevronRight } from 'lucide-react'
+import MagicPasteModal from './MagicPasteModal'
 
 const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
     const [activeTab, setActiveTab] = useState('basic')
@@ -30,6 +31,68 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
             })
         }
     }, [customer, isOpen])
+
+    const [isMagicPasteOpen, setIsMagicPasteOpen] = useState(false)
+    const [magicPasteTarget, setMagicPasteTarget] = useState(null)
+
+    const handleMagicPasteResult = (result) => {
+        if (magicPasteTarget?.type === 'basic') {
+            setFormData(prev => ({
+                ...prev,
+                name: result.name || prev.name,
+                phone: result.phone || prev.phone,
+                line: result.line || prev.line,
+                email: result.email || prev.email
+            }))
+        } else if (magicPasteTarget?.type === 'contact') {
+            const { id } = magicPasteTarget
+            const contact = formData.contacts.find(c => c.id === id)
+            updateListItem('contacts', id, 'ALL', {
+                ...contact,
+                name: result.name || contact.name,
+                phone: result.phone || contact.phone,
+                line: result.line || contact.line,
+                email: result.email || contact.email
+            })
+        } else if (magicPasteTarget?.type === 'address') {
+            const { id } = magicPasteTarget
+            const addr = formData.addresses.find(a => a.id === id)
+            updateListItem('addresses', id, 'ALL', {
+                ...addr,
+                place_name: result.name || addr.place_name,
+                number: result.number || addr.number,
+                villageno: result.villageno || addr.villageno,
+                village: result.village || addr.village,
+                lane: result.lane || addr.lane,
+                road: result.road || addr.road,
+                subdistrict: result.subdistrict || addr.subdistrict,
+                district: result.district || addr.district,
+                province: result.province || addr.province,
+                zipcode: result.zipcode || addr.zipcode,
+                maps: result.maps || addr.maps
+            })
+        } else if (magicPasteTarget?.type === 'tax') {
+            const { id } = magicPasteTarget
+            const tax = formData.tax_invoices.find(t => t.id === id)
+            updateListItem('tax_invoices', id, 'ALL', {
+                ...tax,
+                company: result.name || tax.company,
+                taxid: result.taxid || tax.taxid,
+                branch: result.branch || tax.branch,
+                number: result.number || tax.number,
+                villageno: result.villageno || tax.villageno,
+                village: result.village || tax.village,
+                lane: result.lane || tax.lane,
+                road: result.road || tax.road,
+                subdistrict: result.subdistrict || tax.subdistrict,
+                district: result.district || tax.district,
+                province: result.province || tax.province,
+                zipcode: result.zipcode || tax.zipcode,
+                maps: result.maps || tax.maps
+            })
+        }
+    }
+
 
     if (!isOpen) return null
 
@@ -144,6 +207,25 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                         background: #f8fafc;
                         color: var(--text-main);
                     }
+                    .magic-icon-btn {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 50%;
+                        background: var(--primary-50);
+                        color: var(--primary-600);
+                        border: none;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        flex-shrink: 0;
+                    }
+                    .magic-icon-btn:hover {
+                        background: var(--primary-100);
+                        transform: scale(1.1);
+                        box-shadow: 0 0 12px var(--primary-200);
+                    }
                 `}</style>
 
                 {/* Header */}
@@ -196,6 +278,7 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                     ))}
                 </div>
 
+
                 {/* Content Body */}
                 <div style={{
                     flex: 1,
@@ -207,6 +290,17 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                 }}>
                     {activeTab === 'basic' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                <User size={18} style={{ color: 'var(--primary-500)' }} />
+                                <span style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: '#475569' }}>ข้อมูลพื้นฐาน</span>
+                                <button
+                                    className="magic-icon-btn"
+                                    onClick={() => { setMagicPasteTarget({ type: 'basic' }); setIsMagicPasteOpen(true); }}
+                                    title="กรอกอัตโนมัติ (AI)"
+                                >
+                                    <Sparkles size={14} />
+                                </button>
+                            </div>
                             <input
                                 className="input-field"
                                 value={formData.name}
@@ -242,12 +336,19 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             {formData.contacts.map((contact, idx) => (
                                 <div key={contact.id} className="card" style={{ padding: '20px', position: 'relative' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#f1f5f9', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>{idx + 1}</div>
-                                            <span style={{ fontWeight: 600, color: '#475569' }}>ข้อมูลผู้ติดต่อ</span>
+                                            <Users size={18} style={{ color: 'var(--primary-500)' }} />
+                                            <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569' }}>ข้อมูลผู้ติดต่อ #{idx + 1}</span>
+                                            <button
+                                                className="magic-icon-btn"
+                                                onClick={() => { setMagicPasteTarget({ type: 'contact', id: contact.id }); setIsMagicPasteOpen(true); }}
+                                                title="กรอกอัตโนมัติ (AI)"
+                                            >
+                                                <Sparkles size={14} />
+                                            </button>
                                         </div>
-                                        <button onClick={() => removeListItem('contacts', contact.id)} style={{ border: 'none', background: 'none', color: '#fda4af', cursor: 'pointer' }}>
+                                        <button onClick={() => removeListItem('contacts', contact.id)} style={{ border: 'none', background: 'none', color: '#fda4af', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -324,22 +425,48 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             {formData.addresses.map((addr, idx) => (
                                 <div key={addr.id} className="card" style={{ padding: '20px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <MapPin size={18} style={{ color: 'var(--primary-500)' }} />
-                                            <input
-                                                style={{ border: 'none', fontWeight: 700, outline: 'none', width: '120px' }}
-                                                value={addr.label || ''}
-                                                onChange={e => updateListItem('addresses', addr.id, 'label', e.target.value)}
-                                                placeholder="ป้ายที่อยู่..."
-                                            />
-                                            {addr.is_default && <span style={{ padding: '2px 8px', background: 'var(--primary-500)', color: 'white', borderRadius: '4px', fontSize: '10px', fontWeight: 800 }}>PRIMARY</span>}
+                                            <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569' }}>ข้อมูลที่อยู่ #{idx + 1}</span>
+                                            <button
+                                                className="magic-icon-btn"
+                                                onClick={() => { setMagicPasteTarget({ type: 'address', id: addr.id }); setIsMagicPasteOpen(true); }}
+                                                title="กรอกอัตโนมัติ (AI)"
+                                            >
+                                                <Sparkles size={14} />
+                                            </button>
+                                            {addr.is_default && (
+                                                <span style={{
+                                                    padding: '2px 8px',
+                                                    background: 'var(--primary-500)',
+                                                    color: 'white',
+                                                    borderRadius: '4px',
+                                                    fontSize: '10px',
+                                                    fontWeight: 800,
+                                                    marginLeft: '4px',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    PRIMARY
+                                                </span>
+                                            )}
                                         </div>
-                                        <button onClick={() => removeListItem('addresses', addr.id)} style={{ border: 'none', background: 'none', color: '#fda4af', cursor: 'pointer' }}>
+                                        <button onClick={() => removeListItem('addresses', addr.id)} style={{ border: 'none', background: 'none', color: '#fda4af', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <div style={{ position: 'relative' }}>
+                                            <MapPin size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                            <input
+                                                className="input-field"
+                                                style={{ paddingLeft: '40px' }}
+                                                placeholder="ป้ายชื่อที่อยู่ (เช่น บ้าน, ออฟฟิศ, หน้าไซต์งาน)"
+                                                value={addr.label || ''}
+                                                onChange={e => updateListItem('addresses', addr.id, 'label', e.target.value)}
+                                            />
+                                        </div>
                                         <input className="input-field" placeholder="ชื่อสถานที่ (เช่น ร้านแสงเจริญ, ตึกภิรัช)" value={addr.place_name || ''} onChange={e => updateListItem('addresses', addr.id, 'place_name', e.target.value)} />
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                             <input className="input-field" placeholder="เลขที่" value={addr.number || ''} onChange={e => updateListItem('addresses', addr.id, 'number', e.target.value)} />
@@ -393,12 +520,19 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             {formData.tax_invoices.map((tax, idx) => (
                                 <div key={tax.id} className="card" style={{ padding: '20px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <FileText size={18} style={{ color: 'var(--primary-500)' }} />
-                                            <span style={{ fontWeight: 700, color: '#475569' }}>ข้อมูลใบกำกับภาษี #{idx + 1}</span>
+                                            <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569' }}>ข้อมูลใบกำกับภาษี #{idx + 1}</span>
+                                            <button
+                                                className="magic-icon-btn"
+                                                onClick={() => { setMagicPasteTarget({ type: 'tax', id: tax.id }); setIsMagicPasteOpen(true); }}
+                                                title="กรอกอัตโนมัติ (AI)"
+                                            >
+                                                <Sparkles size={14} />
+                                            </button>
                                         </div>
-                                        <button onClick={() => removeListItem('tax_invoices', tax.id)} style={{ border: 'none', background: 'none', color: '#fda4af', cursor: 'pointer' }}>
+                                        <button onClick={() => removeListItem('tax_invoices', tax.id)} style={{ border: 'none', background: 'none', color: '#fda4af', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -415,7 +549,7 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                                                 <label style={{ fontSize: 'var(--font-xs)', fontWeight: 700, color: '#64748b' }}>ที่อยู่ตามใบกำกับภาษี</label>
                                                 <select
                                                     style={{ fontSize: '11px', padding: '4px', borderRadius: '6px', border: '1px solid #e2e8f0' }}
-                                                    onChange={(e) => applyAddressToTax(tax.id, Number(e.target.value), 'registration')}
+                                                    onChange={(e) => applyAddressToTax(tax.id, e.target.value, 'registration')}
                                                     value=""
                                                 >
                                                     <option value="">--- ดึงข้อมูลจากที่อยู่ ---</option>
@@ -509,6 +643,11 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                     <style>{`
                         @keyframes spin { to { transform: rotate(360deg); } }
                     `}</style>
+                    <MagicPasteModal
+                        isOpen={isMagicPasteOpen}
+                        onClose={() => setIsMagicPasteOpen(false)}
+                        onParse={handleMagicPasteResult}
+                    />
                 </div>
             </div>
         </div >
