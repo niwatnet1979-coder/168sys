@@ -140,30 +140,147 @@ h6 {
 }
 
 .button-primary {
-    background-color: var(--primary-500);
+    background-color: var(--primary-600);
     color: white;
-    padding: var(--space-2) var(--space-4);
-    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-lg);
     border: none;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .button-primary:hover {
-    background-color: var(--primary-600);
+    background-color: var(--primary-700);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
 }
 
 .input-field {
     width: 100%;
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-3) var(--space-4);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     outline: none;
     transition: all 0.2s ease;
+    font-family: inherit;
+    font-size: var(--font-body);
 }
 
 .input-field:focus {
     border-color: var(--primary-400);
-    box-shadow: 0 0 0 2px var(--primary-100);
+    box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+/* Common Utility Classes (Tailwind-like shim) */
+.w-full {
+    width: 100%;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.gap-4 {
+    gap: 1rem;
+}
+
+.p-0 {
+    padding: 0 !important;
+}
+
+.px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+.text-gray-600 {
+    color: #4b5563;
+}
+
+.text-gray-500 {
+    color: #6b7280;
+}
+
+.bg-gray-50 {
+    background-color: #f9fafb;
+}
+
+.border-b {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.border-collapse {
+    border-collapse: collapse;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
+.overflow-x-auto {
+    overflow-x: auto;
+}
+
+.space-y-6>*+* {
+    margin-top: 1.5rem;
+}
+
+.space-y-4>*+* {
+    margin-top: 1rem;
+}
+
+.hidden {
+    display: none;
+}
+
+.md\:flex {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .md\:flex {
+        display: flex;
+    }
+
+    .md\:flex-row {
+        flex-direction: row;
+    }
+
+    .md\:items-center {
+        align-items: center;
+    }
 }
