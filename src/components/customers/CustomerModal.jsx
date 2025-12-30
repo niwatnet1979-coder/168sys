@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, User, MapPin, FileText, Plus, Trash2, Save, Users, Sparkles, Globe, ChevronRight } from 'lucide-react'
+import { X, User, MapPin, FileText, Plus, Trash2, Save, Users, Sparkles, Globe, ChevronRight, Mail, Smartphone, Facebook, Instagram, Phone } from 'lucide-react'
 import MagicPasteModal from './MagicPasteModal'
 
 const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
@@ -309,19 +309,22 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                             />
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                 <input className="input-field" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="เบอร์โทรศัพท์" />
-                                <input className="input-field" value={formData.line} onChange={e => setFormData({ ...formData, line: e.target.value })} placeholder="Line ID" />
+                                <input className="input-field" value={formData.email || ''} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="อีเมล (Email)" />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <input className="input-field" value={formData.line} onChange={e => setFormData({ ...formData, line: e.target.value })} placeholder="Line ID" />
                                 <input className="input-field" value={formData.facebook || ''} onChange={e => setFormData({ ...formData, facebook: e.target.value })} placeholder="Facebook" />
-                                <input className="input-field" value={formData.instagram || ''} onChange={e => setFormData({ ...formData, instagram: e.target.value })} placeholder="Instagram" />
                             </div>
-                            <select className="input-field" value={formData.media} onChange={e => setFormData({ ...formData, media: e.target.value })}>
-                                <option value="">--- เลือกช่องทางที่พบเรา ---</option>
-                                <option value="FB">Facebook</option>
-                                <option value="Tiktok">Tiktok</option>
-                                <option value="Google">Google</option>
-                                <option value="Referral">พี่เนแนะนำ</option>
-                            </select>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <input className="input-field" value={formData.instagram || ''} onChange={e => setFormData({ ...formData, instagram: e.target.value })} placeholder="Instagram" />
+                                <select className="input-field" value={formData.media} onChange={e => setFormData({ ...formData, media: e.target.value })}>
+                                    <option value="">--- ช่องทางที่พบเรา ---</option>
+                                    <option value="FB">Facebook</option>
+                                    <option value="Tiktok">Tiktok</option>
+                                    <option value="Google">Google</option>
+                                    <option value="Referral">พี่เนแนะนำ</option>
+                                </select>
+                            </div>
                             <textarea
                                 className="input-field"
                                 style={{ height: '100px', resize: 'none', paddingTop: '12px' }}
@@ -368,36 +371,44 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                                             />
                                             <input
                                                 className="input-field"
+                                                placeholder="อีเมล (Email)"
+                                                value={contact.email || ''}
+                                                onChange={e => updateListItem('contacts', contact.id, 'email', e.target.value)}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                            <input
+                                                className="input-field"
                                                 placeholder="Line ID"
                                                 value={contact.line || ''}
                                                 onChange={e => updateListItem('contacts', contact.id, 'line', e.target.value)}
                                             />
-                                        </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                             <input
                                                 className="input-field"
                                                 placeholder="Facebook"
                                                 value={contact.facebook || ''}
                                                 onChange={e => updateListItem('contacts', contact.id, 'facebook', e.target.value)}
                                             />
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                             <input
                                                 className="input-field"
                                                 placeholder="Instagram"
                                                 value={contact.instagram || ''}
                                                 onChange={e => updateListItem('contacts', contact.id, 'instagram', e.target.value)}
                                             />
+                                            <input
+                                                className="input-field"
+                                                placeholder="หมายเหตุ (ผู้ติดต่อ)"
+                                                value={contact.note || ''}
+                                                onChange={e => updateListItem('contacts', contact.id, 'note', e.target.value)}
+                                            />
                                         </div>
-                                        <input
-                                            className="input-field"
-                                            placeholder="หมายเหตุ (ผู้ติดต่อ)"
-                                            value={contact.note || ''}
-                                            onChange={e => updateListItem('contacts', contact.id, 'note', e.target.value)}
-                                        />
                                     </div>
                                 </div>
                             ))}
                             <button
-                                onClick={() => setFormData({ ...formData, contacts: [...formData.contacts, { id: Date.now(), name: '' }] })}
+                                onClick={() => setFormData({ ...formData, contacts: [...formData.contacts, { id: Date.now(), name: '', phone: '', email: '', line: '', facebook: '', instagram: '', note: '' }] })}
                                 style={{
                                     width: '100%',
                                     padding: '16px',

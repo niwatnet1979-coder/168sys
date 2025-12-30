@@ -19,7 +19,7 @@ const MagicPasteModal = ({ isOpen, onClose, onParse }) => {
         <div style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 2000,
+            zIndex: 4000,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
