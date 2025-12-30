@@ -1,9 +1,46 @@
 -- ==========================================
 -- 168sys Customer Module Migration
--- Version: V1.0.0.4 (Enterprise & Idempotent)
--- Description: Strict relational schema with Audit Trails, Granular Data, and Formal Constraints
+-- Version: V1.0.0.5 (Self-Healing & Idempotent)
+-- Description: Ensures all audit fields exist even if tables already existed.
 -- ==========================================
--- 1. Main Customers Table
+-- 1. Ensure Audit Columns Exist (Self-Healing)
+-- Customers
+ALTER TABLE IF EXISTS public.customers
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE IF EXISTS public.customers
+ADD COLUMN IF NOT EXISTS created_by UUID;
+ALTER TABLE IF EXISTS public.customers
+ADD COLUMN IF NOT EXISTS updated_by UUID;
+-- Addresses
+ALTER TABLE IF EXISTS public.customer_addresses
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE IF EXISTS public.customer_addresses
+ADD COLUMN IF NOT EXISTS created_by UUID;
+ALTER TABLE IF EXISTS public.customer_addresses
+ADD COLUMN IF NOT EXISTS updated_by UUID;
+ALTER TABLE IF EXISTS public.customer_addresses
+ADD COLUMN IF NOT EXISTS place_name TEXT;
+-- Contacts
+ALTER TABLE IF EXISTS public.customer_contacts
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE IF EXISTS public.customer_contacts
+ADD COLUMN IF NOT EXISTS created_by UUID;
+ALTER TABLE IF EXISTS public.customer_contacts
+ADD COLUMN IF NOT EXISTS updated_by UUID;
+ALTER TABLE IF EXISTS public.customer_contacts
+ADD COLUMN IF NOT EXISTS facebook TEXT;
+ALTER TABLE IF EXISTS public.customer_contacts
+ADD COLUMN IF NOT EXISTS instagram TEXT;
+-- Tax Invoices
+ALTER TABLE IF EXISTS public.customer_tax_invoices
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE IF EXISTS public.customer_tax_invoices
+ADD COLUMN IF NOT EXISTS created_by UUID;
+ALTER TABLE IF EXISTS public.customer_tax_invoices
+ADD COLUMN IF NOT EXISTS updated_by UUID;
+ALTER TABLE IF EXISTS public.customer_tax_invoices
+ADD COLUMN IF NOT EXISTS maps TEXT;
+-- 2. Main Tables Structure (Formal Definition)
 CREATE TABLE IF NOT EXISTS public.customers (
     id UUID NOT NULL DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
@@ -21,7 +58,6 @@ CREATE TABLE IF NOT EXISTS public.customers (
     updated_by UUID,
     CONSTRAINT customers_pkey PRIMARY KEY (id)
 ) TABLESPACE pg_default;
--- 2. Customer Addresses Table
 CREATE TABLE IF NOT EXISTS public.customer_addresses (
     id UUID NOT NULL DEFAULT gen_random_uuid(),
     customer_id UUID NOT NULL,
@@ -46,7 +82,6 @@ CREATE TABLE IF NOT EXISTS public.customer_addresses (
     CONSTRAINT customer_addresses_pkey PRIMARY KEY (id),
     CONSTRAINT customer_addresses_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE
 ) TABLESPACE pg_default;
--- 3. Customer Contacts Table
 CREATE TABLE IF NOT EXISTS public.customer_contacts (
     id UUID NOT NULL DEFAULT gen_random_uuid(),
     customer_id UUID NOT NULL,
@@ -65,7 +100,6 @@ CREATE TABLE IF NOT EXISTS public.customer_contacts (
     CONSTRAINT customer_contacts_pkey PRIMARY KEY (id),
     CONSTRAINT customer_contacts_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE
 ) TABLESPACE pg_default;
--- 4. Customer Tax Invoices Table
 CREATE TABLE IF NOT EXISTS public.customer_tax_invoices (
     id UUID NOT NULL DEFAULT gen_random_uuid(),
     customer_id UUID NOT NULL,
@@ -96,8 +130,7 @@ CREATE INDEX IF NOT EXISTS idx_customers_phone ON public.customers USING btree (
 CREATE INDEX IF NOT EXISTS idx_customers_name_trgm ON public.customers USING gin (name gin_trgm_ops) TABLESPACE pg_default;
 -- Safe Realtime Enablement (Idempotent)
 DO $$
-DECLARE row RECORD;
-tables TEXT [] := ARRAY ['customers', 'customer_addresses', 'customer_contacts', 'customer_tax_invoices'];
+DECLARE tables TEXT [] := ARRAY ['customers', 'customer_addresses', 'customer_contacts', 'customer_tax_invoices'];
 table_name TEXT;
 BEGIN FOR table_name IN
 SELECT unnest(tables) LOOP IF NOT EXISTS (
