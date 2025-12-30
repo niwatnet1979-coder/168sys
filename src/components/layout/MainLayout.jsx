@@ -22,6 +22,7 @@ const MainLayout = ({ children, title }) => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Customers', path: '/customers', icon: Users },
+    { name: 'Personnel', path: '/personnel', icon: Users }, // เพิ่มเมนูทีมงาน
     { name: 'Orders', path: '/orders', icon: ShoppingCart },
     { name: 'Inventory', path: '/inventory', icon: Package },
     { name: 'Settings', path: '/settings', icon: Settings },
