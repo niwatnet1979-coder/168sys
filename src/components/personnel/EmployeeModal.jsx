@@ -17,11 +17,19 @@ import {
     Facebook,
     Instagram,
     Sparkles,
-    Users
+    Users,
+    FileText,
+    Upload,
+    MessageSquare,
+    AlignLeft
 } from 'lucide-react';
 import { saveEmployee } from '../../lib/v1/employeeManager';
+import { getSettings, syncSystemOptions } from '../../lib/v1/settingManager';
 import { showError, showSuccess, showConfirm } from '../../lib/sweetAlert';
 import MagicPasteModal from '../customers/MagicPasteModal';
+import { supabase } from '../../lib/supabase';
+import DynamicSelect from '../common/DynamicSelect';
+import FormInput from '../common/FormInput';
 
 /**
  * EmployeeModal (Corrected V2.2)
@@ -44,11 +52,64 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
         status: 'current',
         contacts: [{ id: Date.now(), name: 'เบอร์หลัก', phone: '', line: '', email: '', facebook: '', instagram: '', is_primary: true }],
         addresses: [{ id: Date.now(), label: 'ที่อยู่ปัจจุบัน', number: '', villageno: '', village: '', lane: '', road: '', subdistrict: '', district: '', province: '', zipcode: '', is_default: true }],
-        bank_accounts: [{ id: Date.now(), bank_name: 'KBANK', account_number: '', account_name: '', is_default: true }]
+        bank_accounts: [{ id: Date.now(), bank_name: 'KBANK', account_number: '', account_name: '', is_default: true }],
+        bank_accounts: [{ id: Date.now(), bank_name: 'KBANK', account_number: '', account_name: '', is_default: true }],
+        documents: []
     });
+
+    const [systemOptions, setSystemOptions] = useState({});
+
+    // Fetch System Options on Mount
+    useEffect(() => {
+        const fetchOptions = async () => {
+            const settings = await getSettings();
+            if (settings?.systemOptions) {
+                setSystemOptions(settings.systemOptions);
+            }
+        };
+        fetchOptions();
+    }, []);
+
+    const handleAddNewOption = async (category, newValue) => {
+        if (!newValue) return;
+        const currentList = systemOptions[category] || [];
+        // Check duplicate
+        if (currentList.some(item => item.value === newValue)) return;
+
+        const updatedList = [...currentList, { value: newValue, label: newValue }];
+
+        // Optimistic Update
+        setSystemOptions(prev => ({ ...prev, [category]: updatedList }));
+
+        // Sync to Backend
+        await syncSystemOptions(category, updatedList.map(item => item.value));
+    };
 
     const [isMagicPasteOpen, setIsMagicPasteOpen] = useState(false);
     const [magicPasteTarget, setMagicPasteTarget] = useState(null);
+
+    const handleAddNewTeam = async (name) => {
+        if (!name) return;
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const user = session?.user;
+            const { data, error } = await supabase.from('teams').insert({
+                name,
+                team_type: 'General',
+                status: 'active',
+                created_by: user?.id
+            }).select().single();
+
+            if (error) throw error;
+
+            await onSaveSuccess?.();
+            setFormData(prev => ({ ...prev, team_id: data.id }));
+
+        } catch (err) {
+            console.error(err);
+            showError('ไม่สามารถสร้างทีมได้');
+        }
+    };
 
     const handleMagicPasteResult = (result) => {
         if (magicPasteTarget?.type === 'basic') {
@@ -122,7 +183,8 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
                     ...employee,
                     contacts: employee.contacts?.length ? employee.contacts : [{ id: Date.now(), name: 'เบอร์หลัก', phone: '', line: '', email: '', facebook: '', instagram: '', is_primary: true }],
                     addresses: employee.addresses?.length ? employee.addresses : [{ id: Date.now(), label: 'ที่อยู่ปัจจุบัน', is_default: true }],
-                    bank_accounts: employee.bank_accounts?.length ? employee.bank_accounts : [{ id: Date.now(), bank_name: 'KBANK', account_number: '', is_default: true }]
+                    bank_accounts: employee.bank_accounts?.length ? employee.bank_accounts : [{ id: Date.now(), bank_name: 'KBANK', account_number: '', is_default: true }],
+                    documents: employee.documents || []
                 });
             } else {
                 setFormData({
@@ -139,7 +201,8 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
                     status: 'current',
                     contacts: [{ id: Date.now(), name: 'เบอร์หลัก', phone: '', line: '', email: '', facebook: '', instagram: '', is_primary: true }],
                     addresses: [{ id: Date.now(), label: 'ที่อยู่ปัจจุบัน', number: '', villageno: '', village: '', lane: '', road: '', subdistrict: '', district: '', province: '', zipcode: '', maps: '', is_default: true }],
-                    bank_accounts: [{ id: Date.now(), bank_name: 'KBANK', account_number: '', is_default: true }]
+                    bank_accounts: [{ id: Date.now(), bank_name: 'KBANK', account_number: '', is_default: true }],
+                    documents: []
                 });
             }
             setActiveTab('basic');
@@ -175,11 +238,24 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
     };
 
     const removeListItem = async (listName, id) => {
-        if (formData[listName].length <= 1) return showError('ต้องมีอย่างน้อย 1 รายการ');
+        if (formData[listName].length <= 1 && (listName === 'contacts' || listName === 'addresses' || listName === 'bank_accounts')) return showError('ต้องมีอย่างน้อย 1 รายการ');
         setFormData({ ...formData, [listName]: formData[listName].filter(i => i.id !== id) });
     };
 
     if (!isOpen) return null;
+
+    const handleFileSelect = (id, e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const fileUrl = URL.createObjectURL(file);
+            updateListItem('documents', id, 'ALL', {
+                ...formData.documents.find(d => d.id === id),
+                file_url: fileUrl,
+                file_name: file.name,
+                file_obj: file
+            });
+        }
+    };
 
     return (
         <div style={{
@@ -198,149 +274,157 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
                 {/* Header */}
                 <div className="modal-header">
                     <div className="header-badge">
-                        <User size={20} />
+                        <User size={24} color="white" />
                     </div>
                     <div className="header-text">
-                        <h2>{formData.id ? 'แก้ไขข้อมูลพนักงาน' : 'เพิ่มพนักงานใหม่'}</h2>
-                        <p>{formData.eid} • {formData.nickname || 'รอกรอกชื่อเล่น'}</p>
+                        <h2>{employee ? 'แก้ไขข้อมูลพนักงาน' : 'เพิ่มพนักงานใหม่'}</h2>
+                        <span>{formData.eid || '...'} • {formData.nickname || '...'}</span>
                     </div>
-                    <button className="close-x" onClick={onClose}><X size={20} /></button>
+                    <button onClick={onClose} className="btn-close"><X size={24} /></button>
                 </div>
 
-                {/* Navbar */}
-                <nav className="modal-nav">
+                {/* Tabs */}
+                <div className="tabs-container">
                     {[
                         { id: 'basic', label: 'ข้อมูลทั่วไป', icon: User },
-                        { id: 'contact', label: 'ผู้ติดต่อ', icon: Phone },
+                        { id: 'contact', label: 'ผู้ติดต่อ', icon: Users },
                         { id: 'address', label: 'ที่อยู่', icon: MapPin },
-                        { id: 'bank', label: 'ธนาคาร', icon: CreditCard }
+                        { id: 'bank', label: 'ธนาคาร', icon: CreditCard },
+                        { id: 'documents', label: 'เอกสาร', icon: FileText }
                     ].map(tab => (
                         <button
                             key={tab.id}
-                            className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
                             onClick={() => setActiveTab(tab.id)}
+                            className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
                         >
-                            <tab.icon size={18} />
+                            <tab.icon size={18} strokeWidth={2.5} />
                             <span>{tab.label}</span>
                         </button>
                     ))}
-                </nav>
+                </div>
 
-                {/* Body Content */}
-                <div className="modal-body-wrapper">
+                {/* Body */}
+                <div className="modal-body">
                     {activeTab === 'basic' && (
-                        <div className="form-stack" style={{ gap: '12px' }}>
-                            <SectionTitle
-                                icon={User}
-                                text="ข้อมูลยืนยันตัวตน"
-                                onMagicClick={() => { setMagicPasteTarget({ type: 'basic' }); setIsMagicPasteOpen(true); }}
-                            />
-                            <div className="grid-2">
-                                <FormGroup placeholder="รหัสพนักงาน (Auto)" value={formData.eid} disabled readOnly />
-                                <FormGroup placeholder="ชื่อเล่น *" value={formData.nickname} onChange={v => setFormData({ ...formData, nickname: v })} />
+                        <div className="form-stack">
+                            <SectionTitle icon={ShieldCheck} text="ข้อมูลยืนยันตัวตน" onMagicClick={() => { setMagicPasteTarget({ type: 'basic' }); setIsMagicPasteOpen(true); }} />
+                            <div className="row-2">
+                                <FormInput label="รหัสพนักงาน" value={formData.eid} disabled readOnly icon={FileText} />
+                                <FormInput label="ชื่อเล่น" value={formData.nickname} onChange={v => setFormData({ ...formData, nickname: v })} placeholder="ชื่อเล่น" icon={User} />
                             </div>
-                            <div className="grid-2">
-                                <FormGroup placeholder="ชื่อจริง" value={formData.first_name} onChange={v => setFormData({ ...formData, first_name: v })} />
-                                <FormGroup placeholder="นามสกุล" value={formData.last_name} onChange={v => setFormData({ ...formData, last_name: v })} />
+                            <div className="row-2">
+                                <FormInput label="ชื่อจริง" value={formData.first_name} onChange={v => setFormData({ ...formData, first_name: v })} placeholder="ชื่อจริง" icon={User} />
+                                <FormInput label="นามสกุล" value={formData.last_name} onChange={v => setFormData({ ...formData, last_name: v })} placeholder="นามสกุล" icon={User} />
                             </div>
 
                             <SectionTitle icon={Briefcase} text="ข้อมูลการทำงาน" />
-                            <div className="grid-2">
-                                <FormGroup placeholder="ตำแหน่ง (เช่น ช่างติดตั้ง)" value={formData.job_position} onChange={v => setFormData({ ...formData, job_position: v })} />
-                                <FormSelect
-                                    value={formData.job_level || ''}
+                            <div className="row-2">
+                                <DynamicSelect
+                                    label="ตำแหน่ง"
+                                    placeholder="เลือกหรือพิมพ์เพิ่ม..."
+                                    value={formData.job_position}
+                                    onChange={v => setFormData({ ...formData, job_position: v })}
+                                    options={systemOptions.jobPositions || []}
+                                    onAddItem={v => handleAddNewOption('jobPositions', v)}
+                                />
+                                <DynamicSelect
+                                    label="ระดับ (Level)"
+                                    placeholder="เลือกระดับ..."
+                                    value={formData.job_level}
                                     onChange={v => setFormData({ ...formData, job_level: v })}
-                                    options={[
-                                        { value: '', label: 'เลือกระดับ (Level)' },
-                                        { value: 'Staff', label: 'Staff' },
-                                        { value: 'Senior', label: 'Senior' },
-                                        { value: 'Leader', label: 'Leader' },
-                                        { value: 'Manager', label: 'Manager' },
-                                        { value: 'Director', label: 'Director' },
-                                        { value: 'Executive', label: 'Executive' }
-                                    ]}
+                                    options={systemOptions.jobLevels || []}
+                                    onAddItem={v => handleAddNewOption('jobLevels', v)}
                                 />
                             </div>
-                            <FormSelect
-                                value={formData.team_id || ''}
+                            <DynamicSelect
+                                label="เลือกทีมสังกัด"
+                                placeholder="เลือกหรือพิมพ์ชื่อทีมใหม่..."
+                                value={formData.team_id}
                                 onChange={v => setFormData({ ...formData, team_id: v })}
-                                options={[
-                                    { value: '', label: 'เลือกทีมสังกัด' },
-                                    ...teams.map(t => ({ value: t.id, label: t.name }))
-                                ]}
+                                options={(teams || []).map(t => ({ value: t.id, label: t.name }))}
+                                onAddItem={handleAddNewTeam}
                             />
-                            <div className="grid-2">
+                            <div className="row-2">
                                 <div className="field-group">
                                     <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', marginBottom: '4px', marginLeft: '4px', display: 'block' }}>วันเริ่มงาน</label>
-                                    <FormGroup type="date" value={formData.start_date} onChange={v => setFormData({ ...formData, start_date: v })} />
+                                    <FormInput type="date" value={formData.start_date} onChange={v => setFormData({ ...formData, start_date: v })} icon={FileText} />
                                 </div>
                                 <div className="field-group">
                                     <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', marginBottom: '4px', marginLeft: '4px', display: 'block' }}>วันสิ้นสุด</label>
-                                    <FormGroup type="date" value={formData.end_date} onChange={v => setFormData({ ...formData, end_date: v })} />
+                                    <FormInput type="date" value={formData.end_date} onChange={v => setFormData({ ...formData, end_date: v })} icon={FileText} />
                                 </div>
                             </div>
-                            <div className="grid-2">
-                                <FormSelect
+
+                            <div className="row-2">
+                                <DynamicSelect
+                                    label="ประเภทจ้าง"
+                                    placeholder="เลือกประเภท..."
                                     value={formData.employment_type}
                                     onChange={v => setFormData({ ...formData, employment_type: v })}
-                                    options={[
-                                        { value: 'พนักงานประจำ', label: 'ประเภทจ้าง: ประจำ' },
-                                        { value: 'พนักงานชั่วคราว', label: 'ประเภทจ้าง: ชั่วคราว' }
-                                    ]}
+                                    options={systemOptions.employmentTypes || []}
+                                    onAddItem={v => handleAddNewOption('employmentTypes', v)}
                                 />
-                                <FormSelect
+                                <DynamicSelect
+                                    label="รูปแบบจ่าย"
+                                    placeholder="เลือกรูปแบบ..."
                                     value={formData.pay_type}
                                     onChange={v => setFormData({ ...formData, pay_type: v })}
-                                    options={[
-                                        { value: 'รายเดือน', label: 'รูปแบบจ่าย: รายเดือน' },
-                                        { value: 'รายวัน', label: 'รูปแบบจ่าย: รายวัน' }
-                                    ]}
+                                    options={systemOptions.paymentTypes || []}
+                                    onAddItem={v => handleAddNewOption('paymentTypes', v)}
                                 />
                             </div>
-                            <div className="grid-2">
-                                <FormGroup placeholder="อัตราค่าจ้าง (บาท)" type="number" value={formData.pay_rate} onChange={v => setFormData({ ...formData, pay_rate: v })} />
-                                <FormGroup placeholder="ค่าคอมมิชชั่น (%)" type="number" value={formData.incentive_rate} onChange={v => setFormData({ ...formData, incentive_rate: v })} />
+                            <div className="row-2">
+                                <DynamicSelect
+                                    label="อัตราค่าจ้าง"
+                                    placeholder="0.00"
+                                    value={formData.pay_rate}
+                                    onChange={v => setFormData({ ...formData, pay_rate: v })}
+                                    options={systemOptions.payRates || []}
+                                    onAddItem={v => handleAddNewOption('payRates', v)}
+                                />
+                                <DynamicSelect
+                                    label="ค่าคอมมิชชัน (%)"
+                                    placeholder="Commission %"
+                                    value={formData.incentive_rate}
+                                    onChange={v => setFormData({ ...formData, incentive_rate: v })}
+                                    options={systemOptions.incentiveRates || []}
+                                    onAddItem={v => handleAddNewOption('incentiveRates', v)}
+                                />
                             </div>
                         </div>
                     )}
 
                     {activeTab === 'contact' && (
                         <div className="form-stack">
-                            {formData.contacts.map((c, idx) => (
-                                <div key={c.id} className="relational-set">
+                            <div className="set-header">
+                                <span style={{ color: 'var(--primary-600)' }}>Contact Set #1</span>
+                            </div>
+                            {formData.contacts.map((contact, idx) => (
+                                <div key={contact.id} className="relational-set">
                                     <div className="set-header">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Users size={18} style={{ color: 'var(--primary-500)' }} />
+                                            <Users size={18} color="var(--primary-500)" />
                                             <span>ผู้ติดต่อ #{idx + 1}</span>
-                                            <button
-                                                className="magic-icon-btn"
-                                                onClick={() => { setMagicPasteTarget({ type: 'contact', id: c.id }); setIsMagicPasteOpen(true); }}
-                                                title="กรอกอัตโนมัติ (AI)"
-                                            >
+                                            <button className="magic-icon-btn" onClick={() => { setMagicPasteTarget({ type: 'contact', id: contact.id }); setIsMagicPasteOpen(true); }}>
                                                 <Sparkles size={14} />
                                             </button>
                                         </div>
-                                        <button className="btn-del" onClick={() => removeListItem('contacts', c.id)}><Trash2 size={16} /></button>
+                                        <button className="btn-del" onClick={() => removeListItem('contacts', contact.id)}><Trash2 size={16} /></button>
                                     </div>
-                                    <div className="grid-single">
-                                        <FormGroup placeholder="ชื่อเรียก (เช่น เบอร์หลัก, เบอร์แม่)" value={c.name} onChange={v => updateListItem('contacts', c.id, 'name', v)} />
+                                    <FormInput icon={User} placeholder="ชื่อ-นามสกุล" value={contact.name} onChange={v => updateListItem('contacts', contact.id, 'name', v)} />
+                                    <div className="row-2">
+                                        <FormInput icon={Phone} placeholder="เบอร์โทรศัพท์" value={contact.phone} onChange={v => updateListItem('contacts', contact.id, 'phone', v)} />
+                                        <FormInput icon={Mail} placeholder="อีเมล" value={contact.email} onChange={v => updateListItem('contacts', contact.id, 'email', v)} />
                                     </div>
-                                    <div className="grid-2">
-                                        <FormGroup icon={Smartphone} placeholder="เบอร์โทรศัพท์" value={c.phone || ''} onChange={v => updateListItem('contacts', c.id, 'phone', v)} />
-                                        <FormGroup icon={Mail} placeholder="อีเมล (Email)" value={c.email || ''} onChange={v => updateListItem('contacts', c.id, 'email', v)} />
+                                    <div className="row-2">
+                                        <FormInput icon={MessageSquare} placeholder="Line ID" value={contact.line} onChange={v => updateListItem('contacts', contact.id, 'line', v)} />
+                                        <FormInput icon={Facebook} placeholder="Facebook" value={contact.facebook} onChange={v => updateListItem('contacts', contact.id, 'facebook', v)} />
                                     </div>
-                                    <div className="grid-2">
-                                        <FormGroup icon={Globe} placeholder="Line ID" value={c.line || ''} onChange={v => updateListItem('contacts', c.id, 'line', v)} />
-                                        <FormGroup icon={Facebook} placeholder="Facebook" value={c.facebook || ''} onChange={v => updateListItem('contacts', c.id, 'facebook', v)} />
-                                    </div>
-                                    <div className="grid-2">
-                                        <FormGroup icon={Instagram} placeholder="Instagram" value={c.instagram || ''} onChange={v => updateListItem('contacts', c.id, 'instagram', v)} />
-                                        <FormGroup placeholder="หมายเหตุ (ผู้ติดต่อ)" value={c.note || ''} onChange={v => updateListItem('contacts', c.id, 'note', v)} />
-                                    </div>
+                                    <FormInput icon={AlignLeft} placeholder="หมายเหตุ" value={contact.note} onChange={v => updateListItem('contacts', contact.id, 'note', v)} />
                                 </div>
                             ))}
-                            <button className="btn-add-dashed" onClick={() => addListItem('contacts', { name: '', phone: '', line: '', email: '', facebook: '', instagram: '', note: '' })}>
-                                <Plus size={18} /> <span>เพิ่มชุดข้อมูลผู้ติดต่อทางการ</span>
+                            <button className="btn-add-dashed" onClick={() => addListItem('contacts', { name: '', phone: '', line: '', email: '', facebook: '', instagram: '', note: '', is_primary: false })}>
+                                <Plus size={18} /> เพิ่มผู้ติดต่อ
                             </button>
                         </div>
                     )}
@@ -351,88 +435,152 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
                                 <div key={addr.id} className="relational-set">
                                     <div className="set-header">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <MapPin size={18} style={{ color: 'var(--primary-500)' }} />
-                                            <span>ที่อยู่ชุดที่ #{idx + 1}</span>
-                                            <button
-                                                className="magic-icon-btn"
-                                                onClick={() => { setMagicPasteTarget({ type: 'address', id: addr.id }); setIsMagicPasteOpen(true); }}
-                                                title="กรอกอัตโนมัติ (AI)"
-                                            >
+                                            <MapPin size={18} color="var(--primary-500)" />
+                                            <span>ที่อยู่ #{idx + 1}</span>
+                                            <button className="magic-icon-btn" onClick={() => { setMagicPasteTarget({ type: 'address', id: addr.id }); setIsMagicPasteOpen(true); }}>
                                                 <Sparkles size={14} />
                                             </button>
+                                            {addr.is_default && <span style={{ fontSize: '10px', background: 'var(--primary-500)', color: 'white', padding: '2px 6px', borderRadius: '4px' }}>MAIN</span>}
                                         </div>
                                         <button className="btn-del" onClick={() => removeListItem('addresses', addr.id)}><Trash2 size={16} /></button>
                                     </div>
-                                    <div className="grid-single">
-                                        <FormGroup placeholder="ป้ายชื่อ (เช่น ตามทะเบียนบ้าน, ที่อยู่ปัจจุบัน)" value={addr.label || ''} onChange={v => updateListItem('addresses', addr.id, 'label', v)} />
+                                    <FormInput placeholder="ป้ายชื่อ (เช่น บ้าน, หอพัก)" value={addr.label} onChange={v => updateListItem('addresses', addr.id, 'label', v)} icon={MapPin} />
+                                    <div className="row-2">
+                                        <FormInput placeholder="เลขที่" value={addr.number} onChange={v => updateListItem('addresses', addr.id, 'number', v)} icon={MapPin} />
+                                        <FormInput placeholder="หมู่ที่" value={addr.villageno} onChange={v => updateListItem('addresses', addr.id, 'villageno', v)} icon={MapPin} />
                                     </div>
-                                    <div className="grid-2">
-                                        <FormGroup placeholder="เลขที่" value={addr.number || ''} onChange={v => updateListItem('addresses', addr.id, 'number', v)} />
-                                        <FormGroup placeholder="หมู่ที่" value={addr.villageno || ''} onChange={v => updateListItem('addresses', addr.id, 'villageno', v)} />
+                                    <FormInput placeholder="หมู่บ้าน / อาคาร" value={addr.village} onChange={v => updateListItem('addresses', addr.id, 'village', v)} icon={MapPin} />
+                                    <div className="row-2">
+                                        <FormInput placeholder="ซอย" value={addr.lane} onChange={v => updateListItem('addresses', addr.id, 'lane', v)} icon={MapPin} />
+                                        <FormInput placeholder="ถนน" value={addr.road} onChange={v => updateListItem('addresses', addr.id, 'road', v)} icon={MapPin} />
                                     </div>
-                                    <div className="grid-single">
-                                        <FormGroup placeholder="หมู่บ้าน / อาคาร" value={addr.village || ''} onChange={v => updateListItem('addresses', addr.id, 'village', v)} />
+                                    <div className="row-2">
+                                        <FormInput placeholder="ตำบล / แขวง" value={addr.subdistrict} onChange={v => updateListItem('addresses', addr.id, 'subdistrict', v)} icon={MapPin} />
+                                        <FormInput placeholder="อำเภอ / เขต" value={addr.district} onChange={v => updateListItem('addresses', addr.id, 'district', v)} icon={MapPin} />
                                     </div>
-                                    <div className="grid-2">
-                                        <FormGroup placeholder="ซอย" value={addr.lane || ''} onChange={v => updateListItem('addresses', addr.id, 'lane', v)} />
-                                        <FormGroup placeholder="ถนน" value={addr.road || ''} onChange={v => updateListItem('addresses', addr.id, 'road', v)} />
+                                    <div className="row-2">
+                                        <FormInput placeholder="จังหวัด" value={addr.province} onChange={v => updateListItem('addresses', addr.id, 'province', v)} icon={MapPin} />
+                                        <FormInput placeholder="รหัสไปรษณีย์" value={addr.zipcode} onChange={v => updateListItem('addresses', addr.id, 'zipcode', v)} icon={MapPin} />
                                     </div>
-                                    <div className="grid-2">
-                                        <FormGroup placeholder="แขวง/ตำบล" value={addr.subdistrict || ''} onChange={v => updateListItem('addresses', addr.id, 'subdistrict', v)} />
-                                        <FormGroup placeholder="เขต/อำเภอ" value={addr.district || ''} onChange={v => updateListItem('addresses', addr.id, 'district', v)} />
-                                    </div>
-                                    <div className="grid-2">
-                                        <FormGroup placeholder="จังหวัด" value={addr.province || ''} onChange={v => updateListItem('addresses', addr.id, 'province', v)} />
-                                        <FormGroup placeholder="รหัสไปรษณีย์" value={addr.zipcode || ''} onChange={v => updateListItem('addresses', addr.id, 'zipcode', v)} />
-                                    </div>
-                                    <div className="grid-single">
-                                        <FormGroup icon={Globe} placeholder="Link Google Maps (ถ้ามี)" value={addr.maps || ''} onChange={v => updateListItem('addresses', addr.id, 'maps', v)} />
-                                    </div>
+                                    <FormInput icon={Globe} placeholder="Google Maps Link" value={addr.maps} onChange={v => updateListItem('addresses', addr.id, 'maps', v)} />
                                 </div>
                             ))}
-                            <button className="btn-add-dashed" onClick={() => addListItem('addresses', { label: '', number: '', villageno: '', village: '', lane: '', road: '', subdistrict: '', district: '', province: '', zipcode: '', maps: '', is_default: false })}>
-                                <Plus size={18} /> <span>เพิ่มชุดที่อยู่อื่นๆ</span>
+                            <button className="btn-add-dashed" onClick={() => addListItem('addresses', { label: 'ที่อยู่เพิ่มเติม', number: '', villageno: '', village: '', lane: '', road: '', subdistrict: '', district: '', province: '', zipcode: '', maps: '', is_default: false })}>
+                                <Plus size={18} /> เพิ่มที่อยู่
                             </button>
                         </div>
                     )}
 
                     {activeTab === 'bank' && (
-                        <div className="form-stack" style={{ gap: '12px' }}>
+                        <div className="form-stack">
+                            <div className="set-header">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <CreditCard size={18} color="var(--primary-600)" />
+                                    <span style={{ color: 'var(--primary-600)' }}>Bank Accounts</span>
+                                </div>
+                                <button className="magic-icon-btn" title="กรอกอัตโนมัติ (AI)" onClick={() => { setMagicPasteTarget({ type: 'bank', id: formData.bank_accounts[0]?.id }); setIsMagicPasteOpen(true); }} >
+                                    <Sparkles size={14} />
+                                </button>
+                            </div>
                             {formData.bank_accounts.map((bank, idx) => (
                                 <div key={bank.id} className="relational-set">
                                     <div className="set-header">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <CreditCard size={18} style={{ color: 'var(--primary-500)' }} />
-                                            <span>บัญชีชุดที่ #{idx + 1}</span>
-                                            <button
-                                                className="magic-icon-btn"
-                                                onClick={() => { setMagicPasteTarget({ type: 'bank', id: bank.id }); setIsMagicPasteOpen(true); }}
-                                                title="กรอกอัตโนมัติ (AI)"
-                                            >
-                                                <Sparkles size={14} />
-                                            </button>
+                                            <CreditCard size={18} color="var(--primary-500)" />
+                                            <span>บัญชี #{idx + 1}</span>
+                                            {bank.is_default && <span style={{ fontSize: '10px', background: 'var(--primary-500)', color: 'white', padding: '2px 6px', borderRadius: '4px' }}>MAIN</span>}
                                         </div>
                                         <button className="btn-del" onClick={() => removeListItem('bank_accounts', bank.id)}><Trash2 size={16} /></button>
                                     </div>
-                                    <div className="grid-2">
-                                        <FormSelect
-                                            value={bank.bank_name}
-                                            onChange={v => updateListItem('bank_accounts', bank.id, 'bank_name', v)}
-                                            options={[
-                                                { value: 'KBANK', label: 'ธนาคารกสิกรไทย' },
-                                                { value: 'SCB', label: 'ธนาคารไทยพาณิชย์' },
-                                                { value: 'BBL', label: 'ธนาคารกรุงเทพ' },
-                                                { value: 'KTB', label: 'ธนาคารกรุงไทย' },
-                                                { value: 'TTB', label: 'ธนาคารทหารไทยธนชาต' }
-                                            ]}
-                                        />
-                                        <FormGroup placeholder="เลขที่บัญชี" value={bank.account_number} onChange={v => updateListItem('bank_accounts', bank.id, 'account_number', v)} />
-                                    </div>
-                                    <FormGroup placeholder="ชื่อเจ้าของบัญชี" value={bank.account_name} onChange={v => updateListItem('bank_accounts', bank.id, 'account_name', v)} />
+                                    <DynamicSelect
+                                        placeholder="เลือกธนาคาร..."
+                                        value={bank.bank_name}
+                                        onChange={v => updateListItem('bank_accounts', bank.id, 'bank_name', v)}
+                                        options={[
+                                            ...(systemOptions.bankNames || []),
+                                            { value: 'KBANK', label: 'กสิกรไทย (KBANK)' },
+                                            { value: 'SCB', label: 'ไทยพาณิชย์ (SCB)' },
+                                            { value: 'BBL', label: 'กรุงเทพ (BBL)' },
+                                            { value: 'KTB', label: 'กรุงไทย (KTB)' },
+                                            { value: 'TTB', label: 'ทหารไทยธนชาต (TTB)' },
+                                            { value: 'BAY', label: 'กรุงศรี (BAY)' },
+                                            { value: 'GSB', label: 'ออมสิน (GSB)' }
+                                        ].filter((v, i, a) => a.findIndex(t => (t.value === v.value)) === i)} // Unique filter in case duplicates
+                                        onAddItem={v => handleAddNewOption('bankNames', v)}
+                                    />
+                                    <FormInput placeholder="เลขที่บัญชี" value={bank.account_number} onChange={v => updateListItem('bank_accounts', bank.id, 'account_number', v)} icon={CreditCard} />
+                                    <FormInput placeholder="ชื่อบัญชี" value={bank.account_name} onChange={v => updateListItem('bank_accounts', bank.id, 'account_name', v)} icon={User} />
                                 </div>
                             ))}
                             <button className="btn-add-dashed" onClick={() => addListItem('bank_accounts', { bank_name: 'KBANK', account_number: '', account_name: '', is_default: false })}>
-                                <Plus size={18} /> <span>เพิ่มบัญชีธนาคาร</span>
+                                <Plus size={18} /> เพิ่มบัญชีธนาคาร
+                            </button>
+                        </div>
+                    )}
+
+                    {activeTab === 'documents' && (
+                        <div className="form-stack">
+                            {formData.documents?.map((doc, idx) => (
+                                <div key={doc.id} className="relational-set">
+                                    <div className="set-header">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <FileText size={18} color="var(--primary-500)" />
+                                            <span>เอกสาร #{idx + 1}</span>
+                                        </div>
+                                        <button className="btn-del" onClick={() => removeListItem('documents', doc.id)}><Trash2 size={16} /></button>
+                                    </div>
+                                    <DynamicSelect
+                                        placeholder="เลือกประเภทเอกสาร..."
+                                        value={doc.doc_type}
+                                        onChange={v => updateListItem('documents', doc.id, 'doc_type', v)}
+                                        options={[
+                                            ...(systemOptions.documentTypes || []),
+                                            { value: 'id_card', label: 'บัตรประชาชน' },
+                                            { value: 'house_reg', label: 'ทะเบียนบ้าน' },
+                                            { value: 'resume', label: 'Resume / CV' },
+                                            { value: 'contract', label: 'สัญญาจ้าง' },
+                                            { value: 'other', label: 'อื่นๆ' }
+                                        ].filter((v, i, a) => a.findIndex(t => (t.value === v.value)) === i)}
+                                        onAddItem={v => handleAddNewOption('documentTypes', v)}
+                                    />
+
+                                    {/* Upload Area */}
+                                    <div
+                                        style={{
+                                            border: '2px dashed #e2e8f0', borderRadius: '16px',
+                                            padding: '20px', textAlign: 'center', cursor: 'pointer',
+                                            background: doc.file_url ? '#f8fafc' : 'white',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onClick={() => document.getElementById(`file-upload-${doc.id}`).click()}
+                                    >
+                                        {doc.file_url ? (
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                                {doc.file_obj?.type.startsWith('image/') || doc.file_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                    <img src={doc.file_url} alt="Preview" style={{ maxHeight: '150px', borderRadius: '8px', objectFit: 'contain' }} />
+                                                ) : (
+                                                    <FileText size={48} color="#94a3b8" />
+                                                )}
+                                                <span style={{ fontSize: '13px', color: '#64748b' }}>{doc.file_name || 'Attached File'}</span>
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', color: '#94a3b8' }}>
+                                                <Upload size={32} />
+                                                <span style={{ fontSize: '13px', fontWeight: 600 }}>คลิกเพื่ออัปโหลดรูปหรือไฟล์ PDF</span>
+                                            </div>
+                                        )}
+                                        <input
+                                            type="file"
+                                            id={`file-upload-${doc.id}`}
+                                            className="hidden"
+                                            accept="image/*,application/pdf"
+                                            onChange={(e) => handleFileSelect(doc.id, e)}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                            <button className="btn-add-dashed" onClick={() => addListItem('documents', { doc_type: 'id_card', file_url: '', file_name: '', file_obj: null })}>
+                                <Plus size={18} /> เพิ่มเอกสาร
                             </button>
                         </div>
                     )}
@@ -458,38 +606,31 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
 
                 <style jsx>{`
                     .modal-header {
-                        padding: 20px 24px; background: white;
-                        border-bottom: 1px solid var(--border-color);
-                        display: flex; align-items: center; gap: 16px;
+                        padding: 24px 32px; background: #fafafa; border-bottom: 1px solid var(--border-color);
+                        display: flex; align-items: center; justify-content: space-between; gap: 16px;
                     }
-                    .header-badge {
-                        padding: 10px; background: var(--primary-100);
-                        color: var(--primary-600); border-radius: 12px;
-                        display: flex; align-items: center; justify-content: center;
-                    }
-                    .header-text h2 { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
-                    .header-text p { font-size: 13px; color: #64748b; margin: 0; }
-                    .close-x { margin-left: auto; background: #f1f5f9; border: none; padding: 8px; border-radius: 50%; cursor: pointer; color: #94a3b8; }
+                    .header-badge { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #3b82f6, #2563eb); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+                    .header-text h2 { margin: 0; font-size: 20px; font-weight: 700; color: #1e293b; }
+                    .header-text span { font-size: 14px; color: #64748b; font-weight: 500; }
+                    .btn-close { width: 36px; height: 36px; border-radius: 50%; border: none; background: #f1f5f9; color: #64748b; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+                    .btn-close:hover { background: #e2e8f0; color: #ef4444; transform: rotate(90deg); }
 
-                    .modal-nav {
-                        display: flex; padding: 0 24px; border-bottom: 1px solid var(--border-color);
-                        background: white;
+                    .tabs-container {
+                        display: flex; padding: 0 32px; border-bottom: 1px solid var(--border-color); background: white;
+                        gap: 8px; overflow-x: auto;
                     }
-                    .nav-item {
-                        display: flex; flex-direction: column; align-items: center; justify-content: center;
-                        padding: 12px 8px; gap: 4px; border: none; background: none; flex: 1;
-                        color: #94a3b8; font-size: 12px; font-weight: 600; cursor: pointer;
-                        transition: 0.2s; border-bottom: 2px solid transparent;
+                    .tab-btn {
+                        padding: 16px 4px; border: none; background: none; margin-bottom: -1px;
+                        display: flex; align-items: center; gap: 8px;
+                        color: #94a3b8; font-weight: 600; font-size: 14px; cursor: pointer;
+                        border-bottom: 2px solid transparent; transition: all 0.2s;
                     }
-                    .nav-item.active { color: var(--primary-600); border-bottom-color: var(--primary-600); background: var(--primary-50); }
-                    .nav-item:hover:not(.active) { background: #f8fafc; color: #64748b; }
-
-                    .modal-body-wrapper { flex: 1; overflow-y: auto; padding: 24px; background: white; }
-                    .form-stack { display: flex; flex-direction: column; gap: 24px; }
-
-                    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-                    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-                    .grid-single { display: flex; flex-direction: column; gap: 12px; }
+                    .tab-btn:hover { color: #64748b; }
+                    .tab-btn.active { color: var(--primary-600); border-bottom-color: var(--primary-600); }
+                    
+                    .modal-body { padding: 32px; overflow-y: auto; flex: 1; }
+                    .form-stack { display: flex; flex-direction: column; gap: 12px; } /* Compact Rhythm 12px */
+                    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
                     .field-group { display: flex; flex-direction: column; flex: 1; }
                     .field-group label { display: none; } /* Rule #71: In-field Labeling */
@@ -532,88 +673,62 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
                         border-radius: 14px; font-weight: 600; color: #64748b; cursor: pointer;
                     }
                     .btn-cancel:hover { background: #f8fafc; }
+                    .hidden { display: none; }
                 `}</style>
             </div>
         </div>
     );
 
-    function SectionTitle({ icon: Icon, text, onMagicClick }) {
-        return (
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Icon size={18} color="var(--primary-500)" />
-                    <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569' }}>{text}</span>
-                    {onMagicClick && (
-                        <button className="magic-icon-btn" onClick={onMagicClick} title="กรอกอัตโนมัติ (AI)">
-                            <Sparkles size={14} />
-                        </button>
-                    )}
-                </div>
-            </div>
-        );
-    }
+}
 
-    function FormGroup({ label, value, onChange, placeholder, type = 'text', icon: Icon, disabled, readOnly }) {
-        return (
-            <div className="field-group" style={{ position: 'relative' }}>
-                {Icon && (
-                    <Icon
-                        size={16}
-                        style={{
-                            position: 'absolute',
-                            left: '12px',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            color: '#94a3b8',
-                            pointerEvents: 'none',
-                            zIndex: 1
-                        }}
-                    />
+function SectionTitle({ icon: Icon, text, onMagicClick }) {
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Icon size={18} color="var(--primary-500)" />
+                <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569' }}>{text}</span>
+                {onMagicClick && (
+                    <button className="magic-icon-btn" onClick={onMagicClick} title="กรอกอัตโนมัติ (AI)">
+                        <Sparkles size={14} />
+                    </button>
                 )}
-                <input
-                    className="input-field"
-                    type={type}
-                    value={value || ''}
-                    onChange={e => onChange?.(e.target.value)}
-                    placeholder={placeholder}
-                    disabled={disabled}
-                    readOnly={readOnly}
-                    style={{ paddingLeft: Icon ? '38px' : '12px' }}
+            </div>
+        </div>
+    );
+}
+
+
+function FormSelect({ value, onChange, options, icon: Icon }) {
+    return (
+        <div className="field-group" style={{ position: 'relative' }}>
+            {Icon && (
+                <Icon
+                    size={16}
+                    style={{
+                        position: 'absolute',
+                        left: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: '#94a3b8',
+                        pointerEvents: 'none',
+                        zIndex: 1
+                    }}
                 />
-            </div>
-        );
-    }
+            )}
+            <select
+                className="select-field"
+                value={value}
+                onChange={e => onChange?.(e.target.value)}
+                style={{ paddingLeft: Icon ? '38px' : '12px' }}
+            >
+                {options.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
 
-    function FormSelect({ value, onChange, options, icon: Icon }) {
-        return (
-            <div className="field-group" style={{ position: 'relative' }}>
-                {Icon && (
-                    <Icon
-                        size={16}
-                        style={{
-                            position: 'absolute',
-                            left: '12px',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            color: '#94a3b8',
-                            pointerEvents: 'none',
-                            zIndex: 1
-                        }}
-                    />
-                )}
-                <select
-                    className="select-field"
-                    value={value}
-                    onChange={e => onChange?.(e.target.value)}
-                    style={{ paddingLeft: Icon ? '38px' : '12px' }}
-                >
-                    {options.map(opt => (
-                        <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                        </option>
-                    ))}
-                </select>
-            </div>
-        );
-    }
+
 }

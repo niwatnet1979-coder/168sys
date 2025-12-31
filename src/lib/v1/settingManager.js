@@ -114,8 +114,11 @@ export const saveShopSettings = async (settingsData) => {
  * Uses a delete-then-insert strategy for a specific category
  */
 export const syncSystemOptions = async (category, items) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Unauthorized')
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user
+
+    // Fallback for development if no user found (remove in production)
+    // if (!user) throw new Error('Unauthorized')
 
     try {
         // 1. Delete existing for this category

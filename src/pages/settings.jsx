@@ -17,6 +17,7 @@ import {
     Clock,
     User
 } from 'lucide-react';
+import FormInput from '../components/common/FormInput';
 
 const OptionSection = ({ category, settings, setSettings, handleSyncOptions }) => {
     const items = settings.systemOptions[category.id] || [];
@@ -205,45 +206,43 @@ export default function SettingsPage() {
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <input
-                                    className="input-field"
+                                <FormInput
                                     placeholder="ชื่อร้าน / บริษัท"
                                     value={settings.shop.name || ''}
-                                    onChange={e => setSettings({ ...settings, shop: { ...settings.shop, name: e.target.value } })}
+                                    onChange={v => setSettings({ ...settings, shop: { ...settings.shop, name: v } })}
+                                    icon={Store}
                                 />
-                                <input
-                                    className="input-field"
+                                <FormInput
                                     placeholder="ชื่อสถานที่ (เช่น อาคารบี, ชั้น 2)"
                                     value={settings.shop.place_name || ''}
-                                    onChange={e => setSettings({ ...settings, shop: { ...settings.shop, place_name: e.target.value } })}
+                                    onChange={v => setSettings({ ...settings, shop: { ...settings.shop, place_name: v } })}
+                                    icon={MapPin}
                                 />
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <input className="input-field" placeholder="เลขที่" value={settings.shop.number || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, number: e.target.value } })} />
-                                    <input className="input-field" placeholder="หมู่ที่" value={settings.shop.villageno || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, villageno: e.target.value } })} />
+                                    <FormInput placeholder="เลขที่" value={settings.shop.number || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, number: v } })} icon={MapPin} />
+                                    <FormInput placeholder="หมู่ที่" value={settings.shop.villageno || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, villageno: v } })} icon={MapPin} />
                                 </div>
-                                <input className="input-field" placeholder="หมู่บ้าน/คอนโด" value={settings.shop.village || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, village: e.target.value } })} />
+                                <FormInput placeholder="หมู่บ้าน/คอนโด" value={settings.shop.village || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, village: v } })} icon={MapPin} />
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <input className="input-field" placeholder="ซอย" value={settings.shop.soi || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, soi: e.target.value } })} />
-                                    <input className="input-field" placeholder="ถนน" value={settings.shop.road || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, road: e.target.value } })} />
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <input className="input-field" placeholder="ตำบล/แขวง" value={settings.shop.subdistrict || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, subdistrict: e.target.value } })} />
-                                    <input className="input-field" placeholder="อำเภอ/เขต" value={settings.shop.district || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, district: e.target.value } })} />
+                                    <FormInput placeholder="ซอย" value={settings.shop.soi || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, soi: v } })} icon={MapPin} />
+                                    <FormInput placeholder="ถนน" value={settings.shop.road || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, road: v } })} icon={MapPin} />
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <input className="input-field" placeholder="จังหวัด" value={settings.shop.province || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, province: e.target.value } })} />
-                                    <input className="input-field" placeholder="รหัสไปรษณีย์" value={settings.shop.zipcode || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, zipcode: e.target.value } })} />
+                                    <FormInput placeholder="ตำบล/แขวง" value={settings.shop.subdistrict || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, subdistrict: v } })} icon={MapPin} />
+                                    <FormInput placeholder="อำเภอ/เขต" value={settings.shop.district || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, district: v } })} icon={MapPin} />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <FormInput placeholder="จังหวัด" value={settings.shop.province || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, province: v } })} icon={MapPin} />
+                                    <FormInput placeholder="รหัสไปรษณีย์" value={settings.shop.zipcode || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, zipcode: v } })} icon={MapPin} />
                                 </div>
 
                                 <div style={{ position: 'relative' }}>
-                                    <MapPin size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                                    <input
-                                        className="input-field"
-                                        style={{ paddingLeft: '40px' }}
+                                    <FormInput
                                         placeholder="Google Maps Link"
                                         value={settings.shop.google_map_link || ''}
-                                        onChange={e => setSettings({ ...settings, shop: { ...settings.shop, google_map_link: e.target.value } })}
+                                        onChange={v => setSettings({ ...settings, shop: { ...settings.shop, google_map_link: v } })}
+                                        icon={MapPin}
                                     />
                                 </div>
 
@@ -255,10 +254,10 @@ export default function SettingsPage() {
                                 </div>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <input className="input-field" placeholder="เบอร์โทรศัพท์" value={settings.shop.phone || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, phone: e.target.value } })} />
-                                    <input className="input-field" placeholder="อีเมล" value={settings.shop.email || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, email: e.target.value } })} />
+                                    <FormInput placeholder="เบอร์โทรศัพท์" value={settings.shop.phone || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, phone: v } })} icon={Phone} />
+                                    <FormInput placeholder="อีเมล" value={settings.shop.email || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, email: v } })} icon={Mail} />
                                 </div>
-                                <input className="input-field" placeholder="เลขประจำตัวผู้เสียภาษี" value={settings.shop.tax_id || ''} onChange={e => setSettings({ ...settings, shop: { ...settings.shop, tax_id: e.target.value } })} />
+                                <FormInput placeholder="เลขประจำตัวผู้เสียภาษี" value={settings.shop.tax_id || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, tax_id: v } })} icon={CreditCard} />
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -309,6 +308,20 @@ export default function SettingsPage() {
                                 </div>
                             </div>
 
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.6 }}>
+                                    <Users size={16} />
+                                    <span style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>การขายและลูกค้า</span>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+                                    {[
+                                        { id: 'customerChannels', label: 'ช่องทางติดต่อ (Channels)', icon: Globe },
+                                    ].map(category => (
+                                        <OptionSection key={category.id} category={category} settings={settings} setSettings={setSettings} handleSyncOptions={handleSyncOptions} />
+                                    ))}
+                                </div>
+                            </div>
+
                             <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)' }} />
 
                             {/* Human Resources */}
@@ -323,8 +336,11 @@ export default function SettingsPage() {
                                         { id: 'teamTypes', label: 'ประเภททีม', icon: List },
                                         { id: 'jobPositions', label: 'ตำแหน่งงาน', icon: User },
                                         { id: 'jobLevels', label: 'ระดับงาน', icon: List },
+                                        { id: 'jobLevels', label: 'ระดับงาน', icon: List },
                                         { id: 'employmentTypes', label: 'ประเภทการจ้างงาน', icon: List },
-                                        { id: 'paymentTypes', label: 'รูปแบบการจ่ายเงิน', icon: List }
+                                        { id: 'paymentTypes', label: 'รูปแบบการจ่ายเงิน', icon: List },
+                                        { id: 'payRates', label: 'อัตราค่าจ้างมาตรฐาน', icon: CreditCard },
+                                        { id: 'incentiveRates', label: 'อัตราคอมมิชชัน', icon: Sparkles }
                                     ].map(category => (
                                         <OptionSection key={category.id} category={category} settings={settings} setSettings={setSettings} handleSyncOptions={handleSyncOptions} />
                                     ))}
@@ -341,6 +357,8 @@ export default function SettingsPage() {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
                                     {[
+                                        { id: 'bankNames', label: 'รายชื่อธนาคาร', icon: CreditCard },
+                                        { id: 'documentTypes', label: 'ประเภทเอกสาร', icon: FileText },
                                         { id: 'expenseTypes', label: 'ประเภทรายจ่าย', icon: List }
                                     ].map(category => (
                                         <OptionSection key={category.id} category={category} settings={settings} setSettings={setSettings} handleSyncOptions={handleSyncOptions} />

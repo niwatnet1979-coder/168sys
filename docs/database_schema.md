@@ -188,6 +188,35 @@
 | `created_by` | UUID | สร้างโดย (User ID) |
 | `updated_by` | UUID | แก้ไขล่าสุดโดย (User ID) |
 
+### 9. `employee_bank_accounts` (บัญชีธนาคารพนักงาน)
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | UUID | Primary Key |
+| `employee_id` | UUID | Foreign Key (FK -> employees.id) |
+| `bank_name` | Text | ชื่อธนาคาร (e.g. KBANK, SCB) |
+| `account_number` | Text | เลขที่บัญชี |
+| `account_name` | Text | ชื่อเจ้าของบัญชี |
+| `is_default` | Boolean | เป็นบัญชีหลัก |
+| `created_at` | Timestamp | วันที่สร้าง |
+| `updated_at` | Timestamp | วันที่แก้ไขล่าสุด |
+| `created_by` | UUID | สร้างโดย (User ID) |
+| `updated_by` | UUID | แก้ไขล่าสุดโดย (User ID) |
+
+### 10. `employee_documents` (เอกสารพนักงาน)
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | UUID | Primary Key |
+| `employee_id` | UUID | Foreign Key (FK -> employees.id) |
+| `doc_type` | Text | ประเภทเอกสาร (profile, id_card, contract) |
+| `file_url` | Text | URL ไฟล์ |
+| `file_name` | Text | ชื่อไฟล์ |
+| `created_at` | Timestamp | วันที่สร้าง |
+| `updated_at` | Timestamp | วันที่แก้ไขล่าสุด |
+| `created_by` | UUID | สร้างโดย (User ID) |
+| `updated_by` | UUID | แก้ไขล่าสุดโดย (User ID) |
+
 ---
 
 ## ⚡ Performance & Security (Indexes)

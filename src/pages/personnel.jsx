@@ -330,6 +330,27 @@ export default function PersonnelPage() {
                     justify-content: center;
                     font-size: 24px;
                     font-weight: 800;
+                    line-height: 1;
+                }
+
+                .btn-more-minimal {
+                    background: transparent;
+                    border: none;
+                    color: #94a3b8;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-left: auto;
+                    transition: all 0.2s;
+                }
+                .btn-more-minimal:hover {
+                    background: #f1f5f9;
+                    color: #1e293b;
                 }
 
                 .profile-info h4 { font-size: 18px; font-weight: 800; color: #1e293b; margin: 0; }
@@ -351,6 +372,51 @@ export default function PersonnelPage() {
                 .status-pill { font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; }
                 .status-pill.current { background: #f0fdf4; color: #16a34a; }
                 .link-text { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--primary-600); }
+
+                /* Team Card Styling */
+                .team-item-v2 {
+                    background: white;
+                    border: 1px solid #f1f5f9;
+                    border-radius: 20px;
+                    padding: 24px;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+                .team-item-v2:hover {
+                    border-color: var(--primary-200);
+                    transform: translateY(-4px);
+                    box-shadow: 0 10px 20px -5px rgba(0,0,0,0.05);
+                }
+                .team-badge {
+                    width: 56px;
+                    height: 56px;
+                    background: #f8fafc;
+                    border-radius: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #64748b;
+                }
+                .team-item-v2:hover .team-badge {
+                    background: var(--primary-50);
+                    color: var(--primary-600);
+                }
+                .team-desc { flex: 1; }
+                .team-desc h5 { margin: 0; font-size: 16px; font-weight: 700; color: #1e293b; }
+                .team-desc p { margin: 4px 0 0; font-size: 13px; color: #64748b; }
+                .team-member-count {
+                    background: #f1f5f9;
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #475569;
+                    padding: 4px 10px;
+                    border-radius: 20px;
+                }
+                :global(.chevron) { color: #cbd5e1; transition: transform 0.2s; }
+                .team-item-v2:hover :global(.chevron) { color: var(--primary-500); transform: translateX(4px); }
 
                 .empty-placeholder {
                     grid-column: 1 / -1;

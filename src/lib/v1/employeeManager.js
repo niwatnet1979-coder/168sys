@@ -45,7 +45,7 @@ export const saveEmployee = async (formData) => {
             nickname: formData.nickname,
             first_name: formData.first_name,
             last_name: formData.last_name,
-            team_id: formData.team_id,
+            team_id: formData.team_id || null,
             job_position: formData.job_position,
             job_level: formData.job_level,
             employment_type: formData.employment_type,
@@ -58,7 +58,6 @@ export const saveEmployee = async (formData) => {
             start_date: formData.start_date,
             end_date: formData.end_date,
             status: formData.status || 'current',
-            photos: formData.photos || {},
             updated_by: userId
         };
 
@@ -151,16 +150,43 @@ export const saveEmployee = async (formData) => {
         // --- Documents ---
         if (formData.documents) {
             await supabase.from('employee_documents').delete().eq('employee_id', newId);
-            const docPayload = formData.documents
-                .filter(d => d.file_url)
-                .map(d => ({
-                    employee_id: newId,
-                    doc_type: d.doc_type,
-                    file_url: d.file_url,
-                    file_name: d.file_name,
-                    created_by: userId,
-                    updated_by: userId
-                }));
+
+            const docPayload = [];
+            for (const d of formData.documents) {
+                let finalUrl = d.file_url;
+
+                // Upload if new file
+                if (d.file_obj) {
+                    const fileExt = d.file_obj.name.split('.').pop();
+                    const fileName = `${newId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                    const { error: uploadError } = await supabase.storage
+                        .from('employee_documents')
+                        .upload(fileName, d.file_obj);
+
+                    if (uploadError) {
+                        console.error('Upload Error:', uploadError);
+                        continue; // Skip failed upload or handle error
+                    }
+
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('employee_documents')
+                        .getPublicUrl(fileName);
+
+                    finalUrl = publicUrl;
+                }
+
+                if (finalUrl) {
+                    docPayload.push({
+                        employee_id: newId,
+                        doc_type: d.doc_type,
+                        file_url: finalUrl,
+                        file_name: d.file_name,
+                        created_by: userId,
+                        updated_by: userId
+                    });
+                }
+            }
+
             if (docPayload.length > 0) {
                 await supabase.from('employee_documents').insert(docPayload);
             }

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { saveTeam } from '../../lib/v1/teamManager';
 import { showError, showSuccess } from '../../lib/sweetAlert';
+import FormInput from '../common/FormInput';
 
 /**
  * TeamModal - ฟอร์มจัดการข้อมูลฝ่าย / ทีม
@@ -84,12 +85,11 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
 
             <div className="input-group">
               <label>ชื่อทีม <span className="required">*</span></label>
-              <input
-                type="text"
-                className="input-field"
-                placeholder="เช่น ทีมช่าง A"
+              <FormInput
+                placeholder="ระบุชื่อทีม (เช่น ทีมช่าง A)"
                 value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                onChange={v => setFormData({ ...formData, name: v })}
+                icon={Users2}
               />
             </div>
 
@@ -97,7 +97,7 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
               <div className="input-group">
                 <label>ประเภททีม</label>
                 <select
-                  className="input-field"
+                  className="select-field"
                   value={formData.team_type}
                   onChange={e => setFormData({ ...formData, team_type: e.target.value })}
                 >
@@ -112,6 +112,7 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
                 <input
                   type="number"
                   className="input-field"
+                  placeholder="0"
                   value={formData.sort_order}
                   onFocus={e => e.target.select()}
                   onChange={e => setFormData({ ...formData, sort_order: e.target.value === '' ? '' : parseInt(e.target.value) })}
@@ -132,8 +133,9 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
                   <img src={previewUrl} alt="QR Preview" className="qr-preview" />
                 ) : (
                   <div className="upload-placeholder">
-                    <Upload size={32} />
-                    <p>คลิกเพื่อเลือกรูป QR Code</p>
+                    <Upload size={48} color="var(--text-muted)" strokeWidth={1.5} />
+                    <span className="placeholder-title">อัปโหลด QR Code</span>
+                    <span className="placeholder-desc">รองรับไฟล์ JPG, PNG</span>
                   </div>
                 )}
                 <input
@@ -152,16 +154,18 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
                 />
               </div>
               {previewUrl && (
-                <button
-                  className="remove-qr-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPreviewUrl(null);
-                    setFormData({ ...formData, payment_qr_url: '' });
-                  }}
-                >
-                  <Trash2 size={14} /> ลบรูปภาพ
-                </button>
+                <div style={{ textAlign: 'right' }}>
+                  <button
+                    className="remove-qr-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewUrl(null);
+                      setFormData({ ...formData, payment_qr_url: '' });
+                    }}
+                  >
+                    <Trash2 size={14} /> ลบรูปภาพ
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -170,7 +174,7 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
         {/* Footer */}
         <div className="modal-footer">
           <button className="secondary-btn" onClick={onClose}>ยกเลิก</button>
-          <button className="primary-btn" onClick={handleSave} disabled={loading}>
+          <button className="button-primary" onClick={handleSave} disabled={loading}>
             <Save size={18} />
             {loading ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
           </button>
@@ -181,7 +185,7 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
         .modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0,0,0,0.5);
+          background: rgba(0,0,0,0.4);
           backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
@@ -193,12 +197,18 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
         .modal-content {
           background: white;
           width: 100%;
-          max-width: 640px;
+          max-width: 560px; /* Slightly more compact */
           border-radius: 24px;
           display: flex;
           flex-direction: column;
-          box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+          box-shadow: 0 40px 80px -20px rgba(0,0,0,0.15);
           overflow: hidden;
+          animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalSlideUp {
+          from { opacity: 0; transform: translateY(20px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .modal-header {
@@ -207,7 +217,7 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background: #fafafa;
+          background: white;
         }
 
         .header-title {
@@ -218,22 +228,36 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
 
         .header-icon {
           color: var(--primary-600);
+          background: var(--primary-50);
+          padding: 6px;
+          border-radius: 10px;
+          box-sizing: content-box;
         }
 
         .header-title h2 {
           font-size: 18px;
-          font-weight: 800;
+          font-weight: 700;
           color: #1e293b;
           margin: 0;
+          letter-spacing: -0.01em;
         }
 
         .close-btn {
-          background: #f1f5f9;
+          background: transparent;
           border: none;
-          color: #64748b;
+          color: #94a3b8;
           padding: 8px;
-          border-radius: 50%;
+          border-radius: 10px;
           cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .close-btn:hover {
+          background: #f1f5f9;
+          color: #ef4444;
         }
 
         .modal-body {
@@ -241,19 +265,21 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
           display: flex;
           flex-direction: column;
           gap: 24px;
+          max-height: 70vh;
+          overflow-y: auto;
         }
 
         .section-header {
           display: flex;
           align-items: center;
-          gap: 8px;
-          margin-bottom: 20px;
+          gap: 10px;
+          margin-bottom: 12px; /* Rule #77: 12px gap */
         }
 
         .section-header span {
           font-size: 15px;
           font-weight: 700;
-          color: #475569;
+          color: #334155;
           line-height: 1;
         }
 
@@ -262,8 +288,11 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
           border: 1px solid #bae6fd;
           color: var(--primary-600);
           padding: 4px;
-          border-radius: 8px;
+          border-radius: 6px;
           cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .form-grid {
@@ -273,12 +302,12 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
         }
 
         .field-row {
-          display: flex;
-          gap: 12px;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
         }
 
         .input-group {
-          flex: 1;
           display: flex;
           flex-direction: column;
           gap: 8px;
@@ -288,78 +317,86 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
           font-size: 13px;
           font-weight: 600;
           color: #64748b;
+          margin-left: 4px;
         }
 
         .required {
           color: #ef4444;
+          margin-left: 2px;
         }
 
-        .input-field {
-          width: 100%;
-          height: 44px;
-          padding: 0 14px;
-          border: 1px solid #e2e8f0;
-          border-radius: 14px;
-          font-size: 14px;
-          outline: none;
-          transition: all 0.2s;
-        }
-
-        .input-field:focus {
-          border-color: var(--primary-400);
-          box-shadow: 0 0 0 4px var(--primary-50);
-        }
-
+        /* QR Section */
         .qr-section {
-          margin-top: 10px;
+          margin-top: 8px;
         }
 
         .qr-upload-area {
           border: 2px dashed #e2e8f0;
-          border-radius: 16px;
-          height: 200px;
+          border-radius: 20px;
+          height: 180px;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           overflow: hidden;
           background: #f8fafc;
+          position: relative;
         }
 
         .qr-upload-area:hover {
-          border-color: var(--primary-300);
+          border-color: var(--primary-400);
           background: var(--primary-50);
+          transform: translateY(-2px);
         }
 
         .upload-placeholder {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
           text-align: center;
+        }
+
+        .placeholder-title {
+          font-size: 14px;
+          font-weight: 700;
+          color: #475569;
+        }
+        
+        .placeholder-desc {
+          font-size: 12px;
           color: #94a3b8;
         }
 
-        .upload-placeholder p {
-          font-size: 12px;
-          margin-top: 8px;
-          font-weight: 600;
-        }
-
         .qr-preview {
-          max-width: 100%;
-          max-height: 100%;
+          height: 100%;
+          width: 100%;
           object-fit: contain;
+          padding: 16px;
         }
 
         .remove-qr-btn {
-          margin-top: 8px;
-          background: none;
-          border: none;
+          margin-top: 12px;
+          background: white;
+          border: 1px solid #fee2e2;
           color: #ef4444;
+          padding: 8px 16px;
+          border-radius: 10px;
           font-size: 12px;
           font-weight: 600;
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
           cursor: pointer;
+          transition: all 0.2s;
+          box-shadow: var(--shadow-sm);
+        }
+        
+        .remove-qr-btn:hover {
+          background: #fef2f2;
+          border-color: #fecaca;
         }
 
         .modal-footer {
@@ -368,38 +405,37 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }) {
           display: flex;
           justify-content: flex-end;
           gap: 12px;
-          background: #fafafa;
+          background: white;
         }
 
-        .primary-btn {
-          background: var(--primary-600);
-          color: white;
-          border: none;
-          height: 44px;
-          padding: 0 24px;
-          border-radius: 14px;
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-        }
-
+        /* 48px Height Rule */
         .secondary-btn {
           background: white;
           color: #475569;
           border: 1px solid #e2e8f0;
-          height: 44px;
+          height: 48px;
           padding: 0 24px;
-          border-radius: 14px;
-          font-weight: 700;
+          border-radius: 12px; /* radius-lg */
+          font-weight: 600;
+          font-size: 1rem;
           cursor: pointer;
+          transition: all 0.2s;
         }
 
-        .hidden {
-          display: none;
+        .secondary-btn:hover {
+          background: #f8fafc;
+          border-color: #cbd5e1;
+          color: #1e293b;
         }
+
+        .primary-btn {
+           /* NOTE: Use Global .button-primary instead if possible, 
+              but for now ensuring local consistency */
+           /* This is just a fallback if global is missing, 
+              but we prefer using class="button-primary" directly in JSX */
+        }
+        
+        .hidden { display: none; }
       `}</style>
     </div>
   );

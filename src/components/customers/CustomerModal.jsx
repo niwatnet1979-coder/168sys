@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { X, User, MapPin, FileText, Plus, Trash2, Save, Users, Sparkles, Globe, ChevronRight, Mail, Smartphone, Facebook, Instagram, Phone } from 'lucide-react'
+import { X, User, MapPin, FileText, Plus, Trash2, Save, Users, Sparkles, Globe, ChevronRight, Mail, Smartphone, Facebook, Instagram, Phone, AlignLeft, MessageSquare } from 'lucide-react'
 import MagicPasteModal from './MagicPasteModal'
+import { getSettings, syncSystemOptions } from '../../lib/v1/settingManager'
+import DynamicSelect from '../common/DynamicSelect'
+import FormInput from '../common/FormInput'
 
 const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
     const [activeTab, setActiveTab] = useState('basic')
@@ -12,6 +15,28 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
         contacts: [],
         tax_invoices: []
     })
+
+    const [systemOptions, setSystemOptions] = useState({})
+
+    useEffect(() => {
+        const fetchOptions = async () => {
+            const settings = await getSettings()
+            if (settings?.systemOptions) {
+                setSystemOptions(settings.systemOptions)
+            }
+        }
+        fetchOptions()
+    }, [])
+
+    const handleAddNewOption = async (category, newValue) => {
+        if (!newValue) return
+        const currentList = systemOptions[category] || []
+        if (currentList.some(item => item.value === newValue)) return
+
+        const updatedList = [...currentList, { value: newValue, label: newValue }]
+        setSystemOptions(prev => ({ ...prev, [category]: updatedList }))
+        await syncSystemOptions(category, updatedList.map(item => item.value))
+    }
 
     useEffect(() => {
         if (customer) {
@@ -301,36 +326,41 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                                     <Sparkles size={14} />
                                 </button>
                             </div>
-                            <input
-                                className="input-field"
+                            <FormInput
                                 value={formData.name}
-                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                onChange={v => setFormData({ ...formData, name: v })}
                                 placeholder="ชื่อลูกค้า / นิติบุคคล *"
+                                icon={User}
                             />
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                <input className="input-field" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="เบอร์โทรศัพท์" />
-                                <input className="input-field" value={formData.email || ''} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="อีเมล (Email)" />
+                                <FormInput value={formData.phone} onChange={v => setFormData({ ...formData, phone: v })} placeholder="เบอร์โทรศัพท์" icon={Smartphone} />
+                                <FormInput value={formData.email} onChange={v => setFormData({ ...formData, email: v })} placeholder="อีเมล (Email)" icon={Mail} />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                <input className="input-field" value={formData.line} onChange={e => setFormData({ ...formData, line: e.target.value })} placeholder="Line ID" />
-                                <input className="input-field" value={formData.facebook || ''} onChange={e => setFormData({ ...formData, facebook: e.target.value })} placeholder="Facebook" />
+                                <FormInput value={formData.line} onChange={v => setFormData({ ...formData, line: v })} placeholder="Line ID" icon={MessageSquare} />
+                                <FormInput value={formData.facebook} onChange={v => setFormData({ ...formData, facebook: v })} placeholder="Facebook" icon={Facebook} />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                <input className="input-field" value={formData.instagram || ''} onChange={e => setFormData({ ...formData, instagram: e.target.value })} placeholder="Instagram" />
-                                <select className="input-field" value={formData.media} onChange={e => setFormData({ ...formData, media: e.target.value })}>
-                                    <option value="">--- ช่องทางที่พบเรา ---</option>
-                                    <option value="FB">Facebook</option>
-                                    <option value="Tiktok">Tiktok</option>
-                                    <option value="Google">Google</option>
-                                    <option value="Referral">พี่เนแนะนำ</option>
-                                </select>
+                                <FormInput value={formData.instagram} onChange={v => setFormData({ ...formData, instagram: v })} placeholder="Instagram" icon={Instagram} />
+                                <DynamicSelect
+                                    placeholder="--- ช่องทางที่พบเรา ---"
+                                    value={formData.media}
+                                    onChange={v => setFormData({ ...formData, media: v })}
+                                    options={[
+                                        ...(systemOptions.customerChannels || []),
+                                        { value: 'FB', label: 'Facebook' },
+                                        { value: 'Tiktok', label: 'Tiktok' },
+                                        { value: 'Google', label: 'Google' },
+                                        { value: 'Referral', label: 'พี่เนแนะนำ' }
+                                    ].filter((v, i, a) => a.findIndex(t => (t.value === v.value)) === i)}
+                                    onAddItem={v => handleAddNewOption('customerChannels', v)}
+                                />
                             </div>
-                            <textarea
-                                className="input-field"
-                                style={{ height: '100px', resize: 'none', paddingTop: '12px' }}
+                            <FormInput
                                 value={formData.note}
-                                onChange={e => setFormData({ ...formData, note: e.target.value })}
+                                onChange={v => setFormData({ ...formData, note: v })}
                                 placeholder="หมายเหตุเพิ่มเติม..."
+                                icon={AlignLeft}
                             />
                         </div>
                     )}
@@ -356,52 +386,52 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                                         </button>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <input
-                                            className="input-field"
+                                        <FormInput
                                             placeholder="ชื่อ-นามสกุล ของผู้ติดต่อ"
                                             value={contact.name}
-                                            onChange={e => updateListItem('contacts', contact.id, 'name', e.target.value)}
+                                            onChange={v => updateListItem('contacts', contact.id, 'name', v)}
+                                            icon={User}
                                         />
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                            <input
-                                                className="input-field"
+                                            <FormInput
                                                 placeholder="เบอร์โทรศัพท์ (ผู้ติดต่อ)"
                                                 value={contact.phone || ''}
-                                                onChange={e => updateListItem('contacts', contact.id, 'phone', e.target.value)}
+                                                onChange={v => updateListItem('contacts', contact.id, 'phone', v)}
+                                                icon={Smartphone}
                                             />
-                                            <input
-                                                className="input-field"
+                                            <FormInput
                                                 placeholder="อีเมล (Email)"
                                                 value={contact.email || ''}
-                                                onChange={e => updateListItem('contacts', contact.id, 'email', e.target.value)}
+                                                onChange={v => updateListItem('contacts', contact.id, 'email', v)}
+                                                icon={Mail}
                                             />
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                            <input
-                                                className="input-field"
+                                            <FormInput
                                                 placeholder="Line ID"
                                                 value={contact.line || ''}
-                                                onChange={e => updateListItem('contacts', contact.id, 'line', e.target.value)}
+                                                onChange={v => updateListItem('contacts', contact.id, 'line', v)}
+                                                icon={MessageSquare}
                                             />
-                                            <input
-                                                className="input-field"
+                                            <FormInput
                                                 placeholder="Facebook"
                                                 value={contact.facebook || ''}
-                                                onChange={e => updateListItem('contacts', contact.id, 'facebook', e.target.value)}
+                                                onChange={v => updateListItem('contacts', contact.id, 'facebook', v)}
+                                                icon={Facebook}
                                             />
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                            <input
-                                                className="input-field"
+                                            <FormInput
                                                 placeholder="Instagram"
                                                 value={contact.instagram || ''}
-                                                onChange={e => updateListItem('contacts', contact.id, 'instagram', e.target.value)}
+                                                onChange={v => updateListItem('contacts', contact.id, 'instagram', v)}
+                                                icon={Instagram}
                                             />
-                                            <input
-                                                className="input-field"
+                                            <FormInput
                                                 placeholder="หมายเหตุ (ผู้ติดต่อ)"
                                                 value={contact.note || ''}
-                                                onChange={e => updateListItem('contacts', contact.id, 'note', e.target.value)}
+                                                onChange={v => updateListItem('contacts', contact.id, 'note', v)}
+                                                icon={AlignLeft}
                                             />
                                         </div>
                                     </div>
@@ -469,36 +499,33 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                         <div style={{ position: 'relative' }}>
-                                            <MapPin size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                                            <input
-                                                className="input-field"
-                                                style={{ paddingLeft: '40px' }}
+                                            <FormInput
                                                 placeholder="ป้ายชื่อที่อยู่ (เช่น บ้าน, ออฟฟิศ, หน้าไซต์งาน)"
                                                 value={addr.label || ''}
-                                                onChange={e => updateListItem('addresses', addr.id, 'label', e.target.value)}
+                                                onChange={v => updateListItem('addresses', addr.id, 'label', v)}
+                                                icon={MapPin}
                                             />
                                         </div>
-                                        <input className="input-field" placeholder="ชื่อสถานที่ (เช่น ร้านแสงเจริญ, ตึกภิรัช)" value={addr.place_name || ''} onChange={e => updateListItem('addresses', addr.id, 'place_name', e.target.value)} />
+                                        <FormInput placeholder="ชื่อสถานที่ (เช่น ร้านแสงเจริญ, ตึกภิรัช)" value={addr.place_name || ''} onChange={v => updateListItem('addresses', addr.id, 'place_name', v)} icon={MapPin} />
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                            <input className="input-field" placeholder="เลขที่" value={addr.number || ''} onChange={e => updateListItem('addresses', addr.id, 'number', e.target.value)} />
-                                            <input className="input-field" placeholder="หมู่ที่" value={addr.villageno || ''} onChange={e => updateListItem('addresses', addr.id, 'villageno', e.target.value)} />
+                                            <FormInput placeholder="เลขที่" value={addr.number || ''} onChange={v => updateListItem('addresses', addr.id, 'number', v)} icon={MapPin} />
+                                            <FormInput placeholder="หมู่ที่" value={addr.villageno || ''} onChange={v => updateListItem('addresses', addr.id, 'villageno', v)} icon={MapPin} />
                                         </div>
-                                        <input className="input-field" placeholder="หมู่บ้าน / อาคาร" value={addr.village || ''} onChange={e => updateListItem('addresses', addr.id, 'village', e.target.value)} />
+                                        <FormInput placeholder="หมู่บ้าน / อาคาร" value={addr.village || ''} onChange={v => updateListItem('addresses', addr.id, 'village', v)} icon={MapPin} />
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                            <input className="input-field" placeholder="ซอย" value={addr.lane || ''} onChange={e => updateListItem('addresses', addr.id, 'lane', e.target.value)} />
-                                            <input className="input-field" placeholder="ถนน" value={addr.road || ''} onChange={e => updateListItem('addresses', addr.id, 'road', e.target.value)} />
-                                        </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                            <input className="input-field" placeholder="แขวง / ตำบล" value={addr.subdistrict || ''} onChange={e => updateListItem('addresses', addr.id, 'subdistrict', e.target.value)} />
-                                            <input className="input-field" placeholder="เขต / อำเภอ" value={addr.district || ''} onChange={e => updateListItem('addresses', addr.id, 'district', e.target.value)} />
+                                            <FormInput placeholder="ซอย" value={addr.lane || ''} onChange={v => updateListItem('addresses', addr.id, 'lane', v)} icon={MapPin} />
+                                            <FormInput placeholder="ถนน" value={addr.road || ''} onChange={v => updateListItem('addresses', addr.id, 'road', v)} icon={MapPin} />
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                            <input className="input-field" placeholder="จังหวัด" value={addr.province || ''} onChange={e => updateListItem('addresses', addr.id, 'province', e.target.value)} />
-                                            <input className="input-field" placeholder="รหัสไปรษณีย์" value={addr.zipcode || ''} onChange={e => updateListItem('addresses', addr.id, 'zipcode', e.target.value)} />
+                                            <FormInput placeholder="แขวง / ตำบล" value={addr.subdistrict || ''} onChange={v => updateListItem('addresses', addr.id, 'subdistrict', v)} icon={MapPin} />
+                                            <FormInput placeholder="เขต / อำเภอ" value={addr.district || ''} onChange={v => updateListItem('addresses', addr.id, 'district', v)} icon={MapPin} />
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                            <FormInput placeholder="จังหวัด" value={addr.province || ''} onChange={v => updateListItem('addresses', addr.id, 'province', v)} icon={MapPin} />
+                                            <FormInput placeholder="รหัสไปรษณีย์" value={addr.zipcode || ''} onChange={v => updateListItem('addresses', addr.id, 'zipcode', v)} icon={MapPin} />
                                         </div>
                                         <div style={{ position: 'relative' }}>
-                                            <Globe size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                                            <input className="input-field" style={{ paddingLeft: '40px' }} placeholder="Link Google Maps (ถ้ามี)" value={addr.maps || ''} onChange={e => updateListItem('addresses', addr.id, 'maps', e.target.value)} />
+                                            <FormInput placeholder="Link Google Maps (ถ้ามี)" value={addr.maps || ''} onChange={v => updateListItem('addresses', addr.id, 'maps', v)} icon={Globe} />
                                         </div>
                                     </div>
                                 </div>
@@ -548,10 +575,10 @@ const CustomerModal = ({ isOpen, onClose, customer, onSave }) => {
                                         </button>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <input className="input-field" placeholder="ชื่อจดทะเบียนบริษัท หรือ ชื่อบุคคล" value={tax.company} onChange={e => updateListItem('tax_invoices', tax.id, 'company', e.target.value)} />
+                                        <FormInput placeholder="ชื่อจดทะเบียนบริษัท หรือ ชื่อบุคคล" value={tax.company} onChange={v => updateListItem('tax_invoices', tax.id, 'company', v)} icon={FileText} />
                                         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
-                                            <input className="input-field" placeholder="เลขประจำตัวผู้เสียภาษี (13 หลัก)" value={tax.taxid || ''} onChange={e => updateListItem('tax_invoices', tax.id, 'taxid', e.target.value)} />
-                                            <input className="input-field" placeholder="รหัสสาขา" value={tax.branch || ''} onChange={e => updateListItem('tax_invoices', tax.id, 'branch', e.target.value)} />
+                                            <FormInput placeholder="เลขประจำตัวผู้เสียภาษี (13 หลัก)" value={tax.taxid || ''} onChange={v => updateListItem('tax_invoices', tax.id, 'taxid', v)} icon={FileText} />
+                                            <FormInput placeholder="รหัสสาขา" value={tax.branch || ''} onChange={v => updateListItem('tax_invoices', tax.id, 'branch', v)} icon={FileText} />
                                         </div>
 
                                         {/* Registered Address */}
