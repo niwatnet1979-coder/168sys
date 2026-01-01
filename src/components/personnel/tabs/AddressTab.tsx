@@ -37,15 +37,7 @@ export default function AddressTab({
                                 <Sparkles size={14} />
                             </button>
                             {addr.is_default && (
-                                <span style={{
-                                    padding: '2px 8px',
-                                    background: 'var(--primary-500)',
-                                    color: 'white',
-                                    borderRadius: '4px',
-                                    fontSize: '10px',
-                                    fontWeight: 800,
-                                    marginLeft: '4px'
-                                }}>
+                                <span className="badge-primary">
                                     PRIMARY
                                 </span>
                             )}

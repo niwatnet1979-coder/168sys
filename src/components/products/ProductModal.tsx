@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
-import { X, Package, Sparkles, Box, FileText, Save, AlertCircle, Tag } from 'lucide-react';
+import { X, Package, Sparkles, Box, Tag, Save } from 'lucide-react';
 import { useProductForm } from '../../hooks/useProductForm';
 import { useSystemOptions } from '../../hooks/useSystemOptions';
-import VariantManager from './VariantManager';
 import { Product } from '../../types/product';
-import Swal from 'sweetalert2';
-import FormInput from '../common/FormInput';
-import DynamicSelect from '../common/DynamicSelect';
-import MultiImageUploader from '../common/MultiImageUploader';
-import FormTextarea from '../common/FormTextarea';
+import GeneralInfoTab from './tabs/GeneralInfoTab';
+import VariantTab from './tabs/VariantTab';
 
 interface ProductModalProps {
     isOpen: boolean;
@@ -180,92 +176,23 @@ export default function ProductModal({ isOpen, onClose, product = null, onSucces
                     gap: '24px'
                 }}>
                     {activeTab === 'general' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            {/* Section: ข้อมูลหลัก */}
-                            <div className="card" style={{ padding: '20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                                    <Box size={18} style={{ color: 'var(--primary-500)' }} />
-                                    <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569' }}>ข้อมูลหลัก</span>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                        <DynamicSelect
-                                            label="หมวดหมู่สินค้า *"
-                                            placeholder="เลือกหมวดหมู่..."
-                                            value={formData.category}
-                                            onChange={(v) => handleCategoryChange(String(v))}
-                                            options={categoryOptions}
-                                            onAddItem={async (newValue) => {
-                                                if (newValue) {
-                                                    const result = await addCategory(newValue, newValue);
-                                                    if (result) {
-                                                        handleCategoryChange(result.value);
-                                                    }
-                                                }
-                                            }}
-                                        />
-                                        <FormInput
-                                            label="รหัสสินค้า (Auto) *"
-                                            placeholder="AA000"
-                                            value={formData.product_code}
-                                            onChange={(v) => setFormData({ ...formData, product_code: v })}
-                                            icon={Tag}
-                                        />
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                        <FormInput
-                                            label="ชื่อสินค้า *"
-                                            placeholder="ระบุชื่อสินค้า..."
-                                            value={formData.name}
-                                            onChange={(v) => setFormData({ ...formData, name: v })}
-                                            icon={Package}
-                                        />
-                                        <DynamicSelect
-                                            label="วัสดุหลัก"
-                                            placeholder="เลือกวัสดุ..."
-                                            value={formData.material}
-                                            onChange={(v) => setFormData({ ...formData, material: String(v) })}
-                                            options={materials}
-                                            onAddItem={async (newValue) => {
-                                                if (newValue) {
-                                                    const result = await addMaterial(newValue, newValue);
-                                                    if (result) {
-                                                        setFormData(prev => ({ ...prev, material: result.value }));
-                                                    }
-                                                }
-                                            }}
-                                        />
-                                    </div>
-
-                                    <FormTextarea
-                                        label="รายละเอียดเพิ่มเติม"
-                                        placeholder="รายละเอียดสินค้า..."
-                                        value={formData.description}
-                                        onChange={(v) => setFormData({ ...formData, description: v })}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Section: รูปภาพสินค้า */}
-                            <MultiImageUploader
-                                images={formData.image_url ? formData.image_url.split(',') : ['']}
-                                onChange={(urls) => setFormData({ ...formData, image_url: urls.filter(u => u).join(',') })}
-                                title="รูปภาพสินค้า"
-                                placeholder="คลิกเพื่ออัปโหลดรูปภาพสินค้า"
-                            />
-                        </div>
+                        <GeneralInfoTab
+                            formData={formData}
+                            setFormData={setFormData}
+                            handleCategoryChange={handleCategoryChange}
+                            categoryOptions={categoryOptions}
+                            materials={materials}
+                            addCategory={addCategory}
+                            addMaterial={addMaterial}
+                        />
                     )}
 
                     {activeTab === 'variants' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
-
-                            <VariantManager
-                                variants={formData.variants || []}
-                                setVariants={(newVars) => setFormData({ ...formData, variants: newVars })}
-                                productCode={formData.product_code}
-                            />
-                        </div>
+                        <VariantTab
+                            variants={formData.variants || []}
+                            setVariants={(newVars) => setFormData(prev => ({ ...prev, variants: newVars }))}
+                            productCode={formData.product_code}
+                        />
                     )}
                 </div>
 

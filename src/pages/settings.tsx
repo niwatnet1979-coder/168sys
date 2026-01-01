@@ -6,98 +6,13 @@ import {
     List,
     FileText,
     Save,
-    Trash2,
-    Plus,
-    MapPin,
-    Phone,
-    Mail,
-    CreditCard,
-    Sparkles,
-    CheckCircle2,
     Clock,
-    User,
-    Users,
-    Globe,
-    LucideIcon
+    CheckCircle2
 } from 'lucide-react';
-import FormInput from '../components/common/FormInput';
 import { SettingsData, SystemOption } from '../types/settings';
-import { ApiResponse } from '../types/index';
-
-interface OptionSectionProps {
-    category: { id: string; label: string; icon: LucideIcon };
-    settings: SettingsData;
-    setSettings: React.Dispatch<React.SetStateAction<SettingsData | null>>;
-    handleSyncOptions: (category: string, items: SystemOption[]) => Promise<void>;
-}
-
-const OptionSection: React.FC<OptionSectionProps> = ({ category, settings, setSettings, handleSyncOptions }) => {
-    const items = settings.systemOptions[category.id] || [];
-
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <category.icon size={16} style={{ color: 'var(--primary-500)' }} />
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>{category.label}</span>
-                </div>
-                <button
-                    className="button-ghost"
-                    style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '8px' }}
-                    onClick={() => {
-                        const val = prompt(`เพิ่ม${category.label}`);
-                        if (val) {
-                            const newOption: SystemOption = { id: Date.now(), value: val, label: val };
-                            const updated = [...items, newOption];
-                            setSettings({ ...settings, systemOptions: { ...settings.systemOptions, [category.id]: updated } });
-                            handleSyncOptions(category.id, updated);
-                        }
-                    }}
-                >
-                    <Plus size={12} /> เพิ่ม
-                </button>
-            </div>
-            <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '8px',
-                padding: '12px',
-                background: 'var(--bg-main)',
-                borderRadius: '12px',
-                border: '1px solid var(--border-color)',
-                minHeight: '45px'
-            }}>
-                {items.length === 0 && <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>ไม่มีข้อมูล</span>}
-                {items.map((item, idx) => (
-                    <div key={idx} style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '4px 10px',
-                        background: 'white',
-                        borderRadius: '8px',
-                        border: '1px solid var(--border-color)',
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                    }}>
-                        {item.label}
-                        <button
-                            style={{ border: 'none', background: 'none', color: '#fda4af', cursor: 'pointer', padding: 0, display: 'flex' }}
-                            onClick={() => {
-                                const updated = items.filter((_, i) => i !== idx);
-                                setSettings({ ...settings, systemOptions: { ...settings.systemOptions, [category.id]: updated } });
-                                handleSyncOptions(category.id, updated);
-                            }}
-                        >
-                            <Trash2 size={12} />
-                        </button>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
+import ShopInfoTab from '../components/settings/tabs/ShopInfoTab';
+import SystemOptionsTab from '../components/settings/tabs/SystemOptionsTab';
+import DocumentTab from '../components/settings/tabs/DocumentTab';
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('shop');
@@ -137,9 +52,6 @@ export default function SettingsPage() {
 
     const handleSyncOptions = async (category: string, items: SystemOption[]) => {
         setIsSaving(true);
-        // Transform the local UI state back to what syncSystemOptions expects (array of values or objects)
-        // Here we send simple values if that's what backend expects, but type says items.
-        // syncSystemOptions in manager seems to handle items.
         const result = await syncSystemOptions(category, items);
         if (result.success) {
             loadSettings();
@@ -213,209 +125,15 @@ export default function SettingsPage() {
                 <div className="card" style={{ padding: '32px' }}>
 
                     {activeTab === 'shop' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            {/* Standard Header */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                                <Store size={18} style={{ color: 'var(--primary-500)' }} />
-                                <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569', lineHeight: '1' }}>ข้อมูลร้านค้าและพิกัด</span>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <FormInput
-                                    label="ชื่อร้าน / บริษัท"
-                                    placeholder="ชื่อร้าน / บริษัท"
-                                    value={settings.shop.name || ''}
-                                    onChange={v => setSettings({ ...settings, shop: { ...settings.shop, name: v } })}
-                                    icon={Store}
-                                />
-                                <FormInput
-                                    label="ชื่อสถานที่"
-                                    placeholder="ชื่อสถานที่ (เช่น อาคารบี, ชั้น 2)"
-                                    value={settings.shop.place_name || ''}
-                                    onChange={v => setSettings({ ...settings, shop: { ...settings.shop, place_name: v } })}
-                                    icon={MapPin}
-                                />
-
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <FormInput label="เลขที่" placeholder="เลขที่" value={settings.shop.number || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, number: v } })} icon={MapPin} />
-                                    <FormInput label="หมู่ที่" placeholder="หมู่ที่" value={settings.shop.villageno || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, villageno: v } })} icon={MapPin} />
-                                </div>
-                                <FormInput label="หมู่บ้าน/คอนโด" placeholder="หมู่บ้าน/คอนโด" value={settings.shop.village || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, village: v } })} icon={MapPin} />
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <FormInput label="ซอย" placeholder="ซอย" value={settings.shop.soi || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, soi: v } })} icon={MapPin} />
-                                    <FormInput label="ถนน" placeholder="ถนน" value={settings.shop.road || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, road: v } })} icon={MapPin} />
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <FormInput label="ตำบล/แขวง" placeholder="ตำบล/แขวง" value={settings.shop.subdistrict || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, subdistrict: v } })} icon={MapPin} />
-                                    <FormInput label="อำเภอ/เขต" placeholder="อำเภอ/เขต" value={settings.shop.district || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, district: v } })} icon={MapPin} />
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <FormInput label="จังหวัด" placeholder="จังหวัด" value={settings.shop.province || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, province: v } })} icon={MapPin} />
-                                    <FormInput label="รหัสไปรษณีย์" placeholder="รหัสไปรษณีย์" value={settings.shop.zipcode || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, zipcode: v } })} icon={MapPin} />
-                                </div>
-
-                                <div style={{ position: 'relative' }}>
-                                    <FormInput
-                                        label="Google Maps Link"
-                                        placeholder="Google Maps Link"
-                                        value={settings.shop.google_map_link || ''}
-                                        onChange={v => setSettings({ ...settings, shop: { ...settings.shop, google_map_link: v } })}
-                                        icon={MapPin}
-                                    />
-                                </div>
-
-                                <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '12px 0' }} />
-
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                                    <Phone size={18} style={{ color: 'var(--primary-500)' }} />
-                                    <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569', lineHeight: '1' }}>ข้อมูลติดต่อและภาษี</span>
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <FormInput label="เบอร์โทรศัพท์" placeholder="เบอร์โทรศัพท์" value={settings.shop.phone || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, phone: v } })} icon={Phone} />
-                                    <FormInput label="อีเมล" placeholder="อีเมล" value={settings.shop.email || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, email: v } })} icon={Mail} />
-                                </div>
-                                <FormInput label="เลขประจำตัวผู้เสียภาษี" placeholder="เลขประจำตัวผู้เสียภาษี" value={settings.shop.tax_id || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, tax_id: v } })} icon={CreditCard} />
-
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <input
-                                            type="checkbox"
-                                            id="vat_reg"
-                                            checked={settings.financial.vat_registered}
-                                            onChange={e => setSettings({ ...settings, financial: { ...settings.financial, vat_registered: e.target.checked } })}
-                                        />
-                                        <label htmlFor="vat_reg" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>จดทะเบียน VAT</label>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>อัตราภาษี (%):</span>
-                                        <input
-                                            type="number"
-                                            className="input-field"
-                                            style={{ width: '80px', padding: '6px 12px' }}
-                                            value={settings.financial.vat_rate}
-                                            onFocus={e => e.target.select()}
-                                            onChange={e => setSettings({ ...settings, financial: { ...settings.financial, vat_rate: e.target.value === '' ? undefined : parseFloat(e.target.value) } })}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <ShopInfoTab settings={settings} setSettings={setSettings} />
                     )}
 
                     {activeTab === 'options' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                            {/* Product Options */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.6 }}>
-                                    <Sparkles size={16} />
-                                    <span style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>ตัวเลือกสินค้า</span>
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-                                    {[
-                                        { id: 'productTypes', label: 'ประเภทสินค้า', icon: List },
-                                        { id: 'materials', label: 'วัสดุสินค้า', icon: List },
-                                        { id: 'materialColors', label: 'สีวัสดุ', icon: Sparkles },
-                                        { id: 'crystalColors', label: 'สีคริสตัล', icon: Sparkles },
-                                        { id: 'lightColors', label: 'สีแสงไฟ', icon: Sparkles },
-                                        { id: 'remotes', label: 'รีโมท', icon: List },
-                                        { id: 'bulbTypes', label: 'ประเภทหลอดไฟ', icon: List }
-                                    ].map(category => (
-                                        <OptionSection key={category.id} category={category} settings={settings} setSettings={setSettings} handleSyncOptions={handleSyncOptions} />
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.6 }}>
-                                    <Users size={16} />
-                                    <span style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>การขายและลูกค้า</span>
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-                                    {[
-                                        { id: 'customerChannels', label: 'ช่องทางติดต่อ (Channels)', icon: Globe },
-                                    ].map(category => (
-                                        <OptionSection key={category.id} category={category} settings={settings} setSettings={setSettings} handleSyncOptions={handleSyncOptions} />
-                                    ))}
-                                </div>
-                            </div>
-
-                            <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)' }} />
-
-                            {/* Human Resources */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.6 }}>
-                                    <User size={16} />
-                                    <span style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>ทีมงานและบุคลากร</span>
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-                                    {[
-                                        { id: 'teamNames', label: 'รายชื่อทีมงาน', icon: User },
-                                        { id: 'teamTypes', label: 'ประเภททีม', icon: List },
-                                        { id: 'jobPositions', label: 'ตำแหน่งงาน', icon: User },
-                                        { id: 'jobLevels', label: 'ระดับงาน', icon: List },
-                                        // { id: 'jobLevels', label: 'ระดับงาน', icon: List }, // removed duplicate
-                                        { id: 'employmentTypes', label: 'ประเภทการจ้างงาน', icon: List },
-                                        { id: 'paymentTypes', label: 'รูปแบบการจ่ายเงิน', icon: List },
-                                        { id: 'payRates', label: 'อัตราค่าจ้างมาตรฐาน', icon: CreditCard },
-                                        { id: 'incentiveRates', label: 'อัตราคอมมิชชัน', icon: Sparkles }
-                                    ].map(category => (
-                                        <OptionSection key={category.id} category={category} settings={settings} setSettings={setSettings} handleSyncOptions={handleSyncOptions} />
-                                    ))}
-                                </div>
-                            </div>
-
-                            <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)' }} />
-
-                            {/* Finance */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.6 }}>
-                                    <CreditCard size={16} />
-                                    <span style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>การเงิน</span>
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-                                    {[
-                                        { id: 'bankNames', label: 'รายชื่อธนาคาร', icon: CreditCard },
-                                        { id: 'documentTypes', label: 'ประเภทเอกสาร', icon: FileText },
-                                        { id: 'expenseTypes', label: 'ประเภทรายจ่าย', icon: List }
-                                    ].map(category => (
-                                        <OptionSection key={category.id} category={category} settings={settings} setSettings={setSettings} handleSyncOptions={handleSyncOptions} />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                        <SystemOptionsTab settings={settings} setSettings={setSettings} handleSyncOptions={handleSyncOptions} />
                     )}
 
                     {activeTab === 'documents' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                                <FileText size={18} style={{ color: 'var(--primary-500)' }} />
-                                <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569', lineHeight: '1' }}>เงื่อนไขมาตรฐานในเอกสาร</span>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>เงื่อนไขการเสนอราคา (Default Terms)</label>
-                                    <textarea
-                                        className="input-field"
-                                        rows={6}
-                                        style={{ height: 'auto', padding: '12px' }}
-                                        value={settings.documents.default_terms || ''}
-                                        onChange={e => setSettings({ ...settings, documents: { ...settings.documents, default_terms: e.target.value } })}
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>นโยบายการรับประกัน (Warranty Policy)</label>
-                                    <textarea
-                                        className="input-field"
-                                        rows={6}
-                                        style={{ height: 'auto', padding: '12px' }}
-                                        value={settings.documents.warranty_policy || ''}
-                                        onChange={e => setSettings({ ...settings, documents: { ...settings.documents, warranty_policy: e.target.value } })}
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                        <DocumentTab settings={settings} setSettings={setSettings} />
                     )}
 
                     {/* Final Action Bar */}

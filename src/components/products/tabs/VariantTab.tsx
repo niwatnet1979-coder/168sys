@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { Trash2, Package, Plus, AlertCircle, Ruler, DollarSign, Boxes, Palette, Gem, Tag } from 'lucide-react';
 import { ProductVariant } from '../../types/product';
-import { useSystemOptions } from '../../hooks/useSystemOptions';
-import DynamicSelect from '../common/DynamicSelect';
-import FormInput from '../common/FormInput';
-import MultiImageUploader from '../common/MultiImageUploader';
-import AddItemButton from '../common/AddItemButton';
+import { useSystemOptions } from '../../../hooks/useSystemOptions';
+import DynamicSelect from '../../common/DynamicSelect';
+import FormInput from '../../common/FormInput';
+import MultiImageUploader from '../../common/MultiImageUploader';
+import AddItemButton from '../../common/AddItemButton';
 import { Image as ImageIcon } from 'lucide-react';
 
-interface VariantManagerProps {
+interface VariantTabProps {
     variants: ProductVariant[];
     setVariants: (variants: ProductVariant[]) => void;
     productCode: string;
 }
 
-export default function VariantManager({ variants, setVariants, productCode }: VariantManagerProps) {
+export default function VariantTab({ variants, setVariants, productCode }: VariantTabProps) {
     // Fetch Options from DB
     const { options: colorOptions } = useSystemOptions('materialColors');
     const { options: crystalOptions } = useSystemOptions('crystalColors');
@@ -169,6 +169,7 @@ export default function VariantManager({ variants, setVariants, productCode }: V
                                         color: '#fda4af',
                                         cursor: 'pointer'
                                     }}
+                                    className="hover:text-red-500 transition-colors"
                                     title="ลบตัวเลือก"
                                 >
                                     <Trash2 size={18} />

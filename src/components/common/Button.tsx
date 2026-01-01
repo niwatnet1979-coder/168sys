@@ -22,7 +22,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 break;
             case 'secondary':
             case 'outline':
-                variantClasses = 'bg-white border border-secondary-200 text-secondary-600 hover:bg-secondary-50 rounded-xl font-semibold px-4 py-2 transition-colors';
+                variantClasses = 'button-secondary justify-center';
                 break;
         }
 

@@ -5,7 +5,7 @@ import ProductModal from '../../components/products/ProductModal';
 import { useProducts } from '../../hooks/useProducts';
 import { Search, Plus } from 'lucide-react';
 import { Product } from '../../types/product';
-import { Button } from '../../components/ui/Button';
+import { Button } from '../../components/common/Button';
 import FormInput from '../../components/common/FormInput'; // Import FormInput
 
 export default function ProductsPage() {
