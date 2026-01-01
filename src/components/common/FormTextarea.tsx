@@ -23,7 +23,7 @@ export default function FormTextarea({
     disabled = false,
     readOnly = false,
     style,
-    minHeight = '100px'
+    minHeight = '48px'
 }: FormTextareaProps) {
 
     const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {

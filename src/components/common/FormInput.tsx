@@ -2,20 +2,21 @@ import React, { CSSProperties, ChangeEvent } from 'react';
 import { LucideIcon } from 'lucide-react';
 
 interface FormInputProps {
-    label?: string; // Kept for API compatibility, though not used in render based on previous code
+    label?: string;
     value: string | number | null | undefined;
     onChange?: (value: string) => void;
     placeholder?: string;
     type?: string;
-    icon?: LucideIcon;
     disabled?: boolean;
     readOnly?: boolean;
     style?: CSSProperties;
+    // Icon prop is removed as requested, but kept optional in interface to prevent breaking existing usages until refactored
+    icon?: LucideIcon;
 }
 
 /**
- * Standard Form Input with Icon
- * Follows .cursorrules: Icon inside (Left 12px), Padding Left 38px, Faded Thai Placeholder.
+ * Standard Form Input (No Icon)
+ * Follows .cursorrules: Padding Left 12px, Faded Thai Placeholder.
  */
 export default function FormInput({
     label,
@@ -23,7 +24,6 @@ export default function FormInput({
     onChange,
     placeholder,
     type = 'text',
-    icon: Icon,
     disabled = false,
     readOnly = false,
     style
@@ -43,20 +43,6 @@ export default function FormInput({
                 </label>
             )}
             <div style={{ position: 'relative' }}>
-                {Icon && (
-                    <Icon
-                        size={16}
-                        style={{
-                            position: 'absolute',
-                            left: '12px',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            color: '#94a3b8',
-                            pointerEvents: 'none',
-                            zIndex: 1
-                        }}
-                    />
-                )}
                 <input
                     className={`input-field ${!value ? 'placeholder-faded' : ''}`}
                     type={type}
@@ -65,7 +51,7 @@ export default function FormInput({
                     placeholder={placeholder}
                     disabled={disabled}
                     readOnly={readOnly}
-                    style={{ paddingLeft: Icon ? '38px' : '12px', width: '100%' }}
+                    style={{ paddingLeft: '12px', width: '100%' }}
                 />
             </div>
             <style jsx>{`

@@ -44,7 +44,7 @@ export default function MultiImageUploader({
     const uploadedCount = imageList.filter(url => url).length;
 
     return (
-        <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <div className="card" style={{ padding: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
                 <ImageIcon size={14} style={{ color: '#94a3b8' }} />
                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>
