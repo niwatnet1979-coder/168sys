@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, Package, Plus, AlertCircle, Ruler, DollarSign, Boxes, Palette, Gem, Tag, Layers, FileText } from 'lucide-react';
+import { Trash2, Package, Plus, AlertCircle, Ruler, DollarSign, Boxes, Palette, Gem, Tag, Layers, FileText, Settings } from 'lucide-react';
 import { ProductVariant } from '../../types/product';
 import { useSystemOptions } from '../../../hooks/useSystemOptions';
 import DynamicSelect from '../../common/DynamicSelect';
@@ -219,21 +219,38 @@ export default function VariantTab({
                                     <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Min Stock: {v.min_stock_level}</div>
                                 </div>
 
-                                <button
-                                    onClick={() => removeVariant(idx)}
-                                    style={{
-                                        padding: '8px',
-                                        background: 'none',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        color: '#fda4af',
-                                        cursor: 'pointer'
-                                    }}
-                                    className="hover:text-red-500 transition-colors"
-                                    title="ลบตัวเลือก"
-                                >
-                                    <Trash2 size={18} />
-                                </button>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <button
+                                        onClick={() => { /* TODO: Implement Edit Logic */ }}
+                                        style={{
+                                            padding: '8px',
+                                            background: 'none',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            color: '#94a3b8',
+                                            cursor: 'pointer'
+                                        }}
+                                        className="hover:text-blue-500 transition-colors"
+                                        title="แก้ไขข้อมูล"
+                                    >
+                                        <Settings size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => removeVariant(idx)}
+                                        style={{
+                                            padding: '8px',
+                                            background: 'none',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            color: '#fda4af',
+                                            cursor: 'pointer'
+                                        }}
+                                        className="hover:text-red-500 transition-colors"
+                                        title="ลบตัวเลือก"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>

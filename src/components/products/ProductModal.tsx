@@ -235,9 +235,6 @@ export default function ProductModal({ isOpen, onClose, product = null, onSucces
                                 Product Management System
                             </span>
                         </div>
-                        <button className="magic-icon-btn" title="กรอกอัตโนมัติ (AI)">
-                            <Sparkles size={14} />
-                        </button>
                     </div>
                     <button
                         onClick={onClose}
