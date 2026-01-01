@@ -95,12 +95,14 @@ export default function BankTab({
                         />
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                             <FormInput
+                                label="เลขที่บัญชี"
                                 placeholder="เลขที่บัญชี"
                                 value={bank.account_number}
                                 onChange={v => onUpdateListItem('bank_accounts', bank.id, 'account_number', v)}
                                 icon={CreditCard}
                             />
                             <FormInput
+                                label="ชื่อบัญชี"
                                 placeholder="ชื่อบัญชี"
                                 value={bank.account_name}
                                 onChange={v => onUpdateListItem('bank_accounts', bank.id, 'account_name', v)}

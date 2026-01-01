@@ -47,11 +47,11 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
         team_id: '',
         job_position: '',
         job_level: '',
-        employment_type: 'พนักงานประจำ',
+        employment_type: '',
         work_type: '',
-        pay_type: 'รายเดือน',
-        pay_rate: 0,
-        incentive_rate: 0,
+        pay_type: '',
+        pay_rate: '',
+        incentive_rate: '',
         start_date: '',
         end_date: '',
         status: 'current',
@@ -156,11 +156,11 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
                     team_id: '',
                     job_position: '',
                     job_level: '',
-                    employment_type: 'พนักงานประจำ',
+                    employment_type: '',
                     work_type: '',
-                    pay_type: 'รายเดือน',
-                    pay_rate: 0,
-                    incentive_rate: 0,
+                    pay_type: '',
+                    pay_rate: '',
+                    incentive_rate: '',
                     status: 'current',
                     citizen_id: '',
                     birth_date: '',
@@ -168,8 +168,8 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
                     end_date: '',
                     contacts: [{ id: Date.now(), name: 'เบอร์หลัก', phone: '', line: '', email: '', facebook: '', instagram: '', note: '', is_primary: true }],
                     addresses: [{ id: Date.now().toString(), label: 'ที่อยู่ปัจจุบัน', number: '', villageno: '', village: '', lane: '', road: '', subdistrict: '', district: '', province: '', zipcode: '', maps: '', is_default: true }],
-                    bank_accounts: [{ id: Date.now().toString(), bank_name: 'KBANK', account_number: '', is_default: true }],
-                    documents: []
+                    bank_accounts: [{ id: Date.now().toString(), bank_name: '', account_number: '', is_default: true }],
+                    documents: [{ id: Date.now().toString(), doc_type: '', file_url: '', file_name: '', file_obj: null }]
                 });
             }
             setActiveTab('basic');
@@ -259,6 +259,8 @@ export default function EmployeeModal({ isOpen, onClose, employee, teams, onSave
         const dbContacts = transformUIToDBContacts(formData.contacts);
         const payload: Employee = {
             ...formData,
+            pay_rate: formData.pay_rate === '' ? 0 : Number(formData.pay_rate),
+            incentive_rate: formData.incentive_rate === '' ? 0 : Number(formData.incentive_rate),
             // @ts-ignore - DB contacts structure
             contacts: dbContacts
         };

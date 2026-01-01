@@ -52,6 +52,7 @@ export default function ContactTab({
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         <FormInput
+                            label="ชื่อผู้ติดต่อ (Label)"
                             icon={User}
                             placeholder="ชื่อ-นามสกุล / Label (e.g. เบอร์หลัก)"
                             value={contact.name}
@@ -59,12 +60,14 @@ export default function ContactTab({
                         />
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                             <FormInput
+                                label="เบอร์โทรศัพท์"
                                 icon={Phone}
                                 placeholder="เบอร์โทรศัพท์"
                                 value={contact.phone}
                                 onChange={v => onUpdateListItem('contacts', contact.id, 'phone', v)}
                             />
                             <FormInput
+                                label="อีเมล"
                                 icon={Mail}
                                 placeholder="อีเมล"
                                 value={contact.email}
@@ -73,12 +76,14 @@ export default function ContactTab({
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                             <FormInput
+                                label="Line ID"
                                 icon={MessageSquare}
                                 placeholder="Line ID"
                                 value={contact.line}
                                 onChange={v => onUpdateListItem('contacts', contact.id, 'line', v)}
                             />
                             <FormInput
+                                label="Facebook"
                                 icon={Facebook}
                                 placeholder="Facebook"
                                 value={contact.facebook}
@@ -86,6 +91,7 @@ export default function ContactTab({
                             />
                         </div>
                         <FormInput
+                            label="หมายเหตุ"
                             icon={AlignLeft}
                             placeholder="หมายเหตุ"
                             value={contact.note}

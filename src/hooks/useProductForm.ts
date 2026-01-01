@@ -129,6 +129,18 @@ export const useProductForm = (initialData: Product | null = null) => {
       if (!formData.product_code) throw new Error('กรุณาระบุรหัสสินค้า');
       if (!formData.name) throw new Error('กรุณาระบุชื่อสินค้า');
 
+      // Check Unique Code
+      const { data: existingProducts, error: checkError } = await supabase
+        .from('products')
+        .select('uuid')
+        .eq('product_code', formData.product_code)
+        .neq('uuid', formData.uuid || '00000000-0000-0000-0000-000000000000'); // Exclude current product if editing
+
+      if (checkError) throw checkError;
+      if (existingProducts && existingProducts.length > 0) {
+        throw new Error(`รหัสสินค้า "${formData.product_code}" มีอยู่ในระบบแล้ว กรุณาใช้รหัสอื่น`);
+      }
+
       // 1. Prepare Product Payload
       const productPayload: any = {
         product_code: formData.product_code,

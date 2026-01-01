@@ -69,10 +69,22 @@ export const useSystemOptions = (category: string) => {
                 return existing;
             }
 
+            // Get Current User
+            const { data: { user } } = await supabase.auth.getUser();
+            const userId = user?.id || '00000000-0000-0000-0000-000000000000';
+
             const { data, error } = await supabase
                 .from('system_options_lists')
                 .insert([
-                    { category, label, value }
+                    {
+                        category,
+                        label,
+                        value,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        created_by: userId,
+                        updated_by: userId
+                    }
                 ])
                 .select()
                 .single();

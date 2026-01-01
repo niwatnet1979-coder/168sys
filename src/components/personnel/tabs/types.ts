@@ -29,8 +29,8 @@ export interface EmployeeFormData {
     employment_type: string;
     work_type: string;
     pay_type: string;
-    pay_rate: number;
-    incentive_rate: number;
+    pay_rate: number | string;
+    incentive_rate: number | string;
     start_date: string;
     end_date: string;
     status: 'current' | 'resigned';

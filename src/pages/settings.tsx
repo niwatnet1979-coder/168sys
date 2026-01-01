@@ -222,12 +222,14 @@ export default function SettingsPage() {
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 <FormInput
+                                    label="ชื่อร้าน / บริษัท"
                                     placeholder="ชื่อร้าน / บริษัท"
                                     value={settings.shop.name || ''}
                                     onChange={v => setSettings({ ...settings, shop: { ...settings.shop, name: v } })}
                                     icon={Store}
                                 />
                                 <FormInput
+                                    label="ชื่อสถานที่"
                                     placeholder="ชื่อสถานที่ (เช่น อาคารบี, ชั้น 2)"
                                     value={settings.shop.place_name || ''}
                                     onChange={v => setSettings({ ...settings, shop: { ...settings.shop, place_name: v } })}
@@ -235,25 +237,26 @@ export default function SettingsPage() {
                                 />
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <FormInput placeholder="เลขที่" value={settings.shop.number || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, number: v } })} icon={MapPin} />
-                                    <FormInput placeholder="หมู่ที่" value={settings.shop.villageno || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, villageno: v } })} icon={MapPin} />
+                                    <FormInput label="เลขที่" placeholder="เลขที่" value={settings.shop.number || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, number: v } })} icon={MapPin} />
+                                    <FormInput label="หมู่ที่" placeholder="หมู่ที่" value={settings.shop.villageno || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, villageno: v } })} icon={MapPin} />
                                 </div>
-                                <FormInput placeholder="หมู่บ้าน/คอนโด" value={settings.shop.village || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, village: v } })} icon={MapPin} />
+                                <FormInput label="หมู่บ้าน/คอนโด" placeholder="หมู่บ้าน/คอนโด" value={settings.shop.village || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, village: v } })} icon={MapPin} />
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <FormInput placeholder="ซอย" value={settings.shop.soi || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, soi: v } })} icon={MapPin} />
-                                    <FormInput placeholder="ถนน" value={settings.shop.road || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, road: v } })} icon={MapPin} />
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <FormInput placeholder="ตำบล/แขวง" value={settings.shop.subdistrict || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, subdistrict: v } })} icon={MapPin} />
-                                    <FormInput placeholder="อำเภอ/เขต" value={settings.shop.district || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, district: v } })} icon={MapPin} />
+                                    <FormInput label="ซอย" placeholder="ซอย" value={settings.shop.soi || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, soi: v } })} icon={MapPin} />
+                                    <FormInput label="ถนน" placeholder="ถนน" value={settings.shop.road || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, road: v } })} icon={MapPin} />
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <FormInput placeholder="จังหวัด" value={settings.shop.province || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, province: v } })} icon={MapPin} />
-                                    <FormInput placeholder="รหัสไปรษณีย์" value={settings.shop.zipcode || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, zipcode: v } })} icon={MapPin} />
+                                    <FormInput label="ตำบล/แขวง" placeholder="ตำบล/แขวง" value={settings.shop.subdistrict || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, subdistrict: v } })} icon={MapPin} />
+                                    <FormInput label="อำเภอ/เขต" placeholder="อำเภอ/เขต" value={settings.shop.district || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, district: v } })} icon={MapPin} />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <FormInput label="จังหวัด" placeholder="จังหวัด" value={settings.shop.province || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, province: v } })} icon={MapPin} />
+                                    <FormInput label="รหัสไปรษณีย์" placeholder="รหัสไปรษณีย์" value={settings.shop.zipcode || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, zipcode: v } })} icon={MapPin} />
                                 </div>
 
                                 <div style={{ position: 'relative' }}>
                                     <FormInput
+                                        label="Google Maps Link"
                                         placeholder="Google Maps Link"
                                         value={settings.shop.google_map_link || ''}
                                         onChange={v => setSettings({ ...settings, shop: { ...settings.shop, google_map_link: v } })}
@@ -269,10 +272,10 @@ export default function SettingsPage() {
                                 </div>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <FormInput placeholder="เบอร์โทรศัพท์" value={settings.shop.phone || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, phone: v } })} icon={Phone} />
-                                    <FormInput placeholder="อีเมล" value={settings.shop.email || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, email: v } })} icon={Mail} />
+                                    <FormInput label="เบอร์โทรศัพท์" placeholder="เบอร์โทรศัพท์" value={settings.shop.phone || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, phone: v } })} icon={Phone} />
+                                    <FormInput label="อีเมล" placeholder="อีเมล" value={settings.shop.email || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, email: v } })} icon={Mail} />
                                 </div>
-                                <FormInput placeholder="เลขประจำตัวผู้เสียภาษี" value={settings.shop.tax_id || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, tax_id: v } })} icon={CreditCard} />
+                                <FormInput label="เลขประจำตัวผู้เสียภาษี" placeholder="เลขประจำตัวผู้เสียภาษี" value={settings.shop.tax_id || ''} onChange={v => setSettings({ ...settings, shop: { ...settings.shop, tax_id: v } })} icon={CreditCard} />
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

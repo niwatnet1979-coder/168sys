@@ -59,80 +59,93 @@ export default function AddressTab({
                         </button>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <FormInput
-                            placeholder="ป้ายชื่อที่อยู่ (เช่น บ้าน, หอพัก)"
-                            value={addr.label}
-                            onChange={v => onUpdateListItem('addresses', addr.id, 'label', v)}
-                            icon={MapPin}
-                        />
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <FormInput
-                                placeholder="เลขที่"
-                                value={addr.number}
-                                onChange={v => onUpdateListItem('addresses', addr.id, 'number', v)}
+                                label="ป้ายชื่อ"
+                                placeholder="ป้ายชื่อที่อยู่ (เช่น บ้าน, หอพัก)"
+                                value={addr.label}
+                                onChange={v => onUpdateListItem('addresses', addr.id, 'label', v)}
                                 icon={MapPin}
                             />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <FormInput
+                                    label="เลขที่"
+                                    placeholder="เลขที่"
+                                    value={addr.number}
+                                    onChange={v => onUpdateListItem('addresses', addr.id, 'number', v)}
+                                    icon={MapPin}
+                                />
+                                <FormInput
+                                    label="หมู่ที่"
+                                    placeholder="หมู่ที่"
+                                    value={addr.villageno}
+                                    onChange={v => onUpdateListItem('addresses', addr.id, 'villageno', v)}
+                                    icon={MapPin}
+                                />
+                            </div>
                             <FormInput
-                                placeholder="หมู่ที่"
-                                value={addr.villageno}
-                                onChange={v => onUpdateListItem('addresses', addr.id, 'villageno', v)}
+                                label="หมู่บ้าน / อาคาร"
+                                placeholder="หมู่บ้าน / อาคาร"
+                                value={addr.village}
+                                onChange={v => onUpdateListItem('addresses', addr.id, 'village', v)}
                                 icon={MapPin}
+                            />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <FormInput
+                                    label="ซอย"
+                                    placeholder="ซอย"
+                                    value={addr.lane}
+                                    onChange={v => onUpdateListItem('addresses', addr.id, 'lane', v)}
+                                    icon={MapPin}
+                                />
+                                <FormInput
+                                    label="ถนน"
+                                    placeholder="ถนน"
+                                    value={addr.road}
+                                    onChange={v => onUpdateListItem('addresses', addr.id, 'road', v)}
+                                    icon={MapPin}
+                                />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <FormInput
+                                    label="ตำบล / แขวง"
+                                    placeholder="ตำบล / แขวง"
+                                    value={addr.subdistrict}
+                                    onChange={v => onUpdateListItem('addresses', addr.id, 'subdistrict', v)}
+                                    icon={MapPin}
+                                />
+                                <FormInput
+                                    label="อำเภอ / เขต"
+                                    placeholder="อำเภอ / เขต"
+                                    value={addr.district}
+                                    onChange={v => onUpdateListItem('addresses', addr.id, 'district', v)}
+                                    icon={MapPin}
+                                />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <FormInput
+                                    label="จังหวัด"
+                                    placeholder="จังหวัด"
+                                    value={addr.province}
+                                    onChange={v => onUpdateListItem('addresses', addr.id, 'province', v)}
+                                    icon={MapPin}
+                                />
+                                <FormInput
+                                    label="รหัสไปรษณีย์"
+                                    placeholder="รหัสไปรษณีย์"
+                                    value={addr.zipcode}
+                                    onChange={v => onUpdateListItem('addresses', addr.id, 'zipcode', v)}
+                                    icon={MapPin}
+                                />
+                            </div>
+                            <FormInput
+                                label="Google Maps Link"
+                                icon={Globe}
+                                placeholder="Link Google Maps (ถ้ามี)"
+                                value={addr.maps}
+                                onChange={v => onUpdateListItem('addresses', addr.id, 'maps', v)}
                             />
                         </div>
-                        <FormInput
-                            placeholder="หมู่บ้าน / อาคาร"
-                            value={addr.village}
-                            onChange={v => onUpdateListItem('addresses', addr.id, 'village', v)}
-                            icon={MapPin}
-                        />
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                            <FormInput
-                                placeholder="ซอย"
-                                value={addr.lane}
-                                onChange={v => onUpdateListItem('addresses', addr.id, 'lane', v)}
-                                icon={MapPin}
-                            />
-                            <FormInput
-                                placeholder="ถนน"
-                                value={addr.road}
-                                onChange={v => onUpdateListItem('addresses', addr.id, 'road', v)}
-                                icon={MapPin}
-                            />
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                            <FormInput
-                                placeholder="ตำบล / แขวง"
-                                value={addr.subdistrict}
-                                onChange={v => onUpdateListItem('addresses', addr.id, 'subdistrict', v)}
-                                icon={MapPin}
-                            />
-                            <FormInput
-                                placeholder="อำเภอ / เขต"
-                                value={addr.district}
-                                onChange={v => onUpdateListItem('addresses', addr.id, 'district', v)}
-                                icon={MapPin}
-                            />
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                            <FormInput
-                                placeholder="จังหวัด"
-                                value={addr.province}
-                                onChange={v => onUpdateListItem('addresses', addr.id, 'province', v)}
-                                icon={MapPin}
-                            />
-                            <FormInput
-                                placeholder="รหัสไปรษณีย์"
-                                value={addr.zipcode}
-                                onChange={v => onUpdateListItem('addresses', addr.id, 'zipcode', v)}
-                                icon={MapPin}
-                            />
-                        </div>
-                        <FormInput
-                            icon={Globe}
-                            placeholder="Link Google Maps (ถ้ามี)"
-                            value={addr.maps}
-                            onChange={v => onUpdateListItem('addresses', addr.id, 'maps', v)}
-                        />
                     </div>
                 </div>
             ))}

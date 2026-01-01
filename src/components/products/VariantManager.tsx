@@ -179,20 +179,7 @@ export default function VariantManager({ variants, setVariants, productCode }: V
                 </div>
             )}
 
-            {/* Empty State */}
-            {variants.length === 0 && (
-                <div style={{
-                    textAlign: 'center',
-                    padding: '40px',
-                    border: '2px dashed #e2e8f0',
-                    borderRadius: '16px',
-                    background: '#fafafa'
-                }}>
-                    <Package size={48} style={{ color: '#cbd5e1', margin: '0 auto 12px' }} />
-                    <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#64748b', margin: 0 }}>ยังไม่มีตัวเลือกสินค้า</h3>
-                    <p style={{ fontSize: '14px', color: '#94a3b8', margin: '4px 0 0' }}>เพิ่มขนาด สี หรือคุณสมบัติอื่นๆ ด้านล่าง</p>
-                </div>
-            )}
+
 
             {/* Add New Variant Section */}
             <div className="card" style={{ padding: '20px' }}>
@@ -203,7 +190,8 @@ export default function VariantManager({ variants, setVariants, productCode }: V
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {/* Section: ข้อมูลตัวเลือกสินค้า */}
-                    <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {/* Section: ข้อมูลตัวเลือกสินค้า */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                         {/* Row 1: ขนาดสินค้า */}
                         <div>

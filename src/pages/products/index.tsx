@@ -5,8 +5,8 @@ import ProductModal from '../../components/products/ProductModal';
 import { useProducts } from '../../hooks/useProducts';
 import { Search, Plus } from 'lucide-react';
 import { Product } from '../../types/product';
-import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import FormInput from '../../components/common/FormInput'; // Import FormInput
 
 export default function ProductsPage() {
     const { products, loading, refetch } = useProducts();
@@ -54,10 +54,10 @@ export default function ProductsPage() {
                 {/* Search & Filter Bar */}
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
                     <div className="flex-1 w-full">
-                        <Input
+                        <FormInput
                             placeholder="ค้นหารหัสสินค้า, ชื่อ, หรือหมวดหมู่..."
                             value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
+                            onChange={v => setSearchTerm(v)}
                             icon={Search}
                         />
                     </div>

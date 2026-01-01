@@ -210,7 +210,6 @@ export default function ProductModal({ isOpen, onClose, product = null, onSucces
                                             value={formData.product_code}
                                             onChange={(v) => setFormData({ ...formData, product_code: v })}
                                             icon={Tag}
-                                            readOnly
                                         />
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -259,25 +258,7 @@ export default function ProductModal({ isOpen, onClose, product = null, onSucces
 
                     {activeTab === 'variants' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            {/* SKU Logic Warning if Code is missing */}
-                            {!formData.product_code && (
-                                <div style={{
-                                    background: '#fffbeb',
-                                    border: '1px solid #fcd34d',
-                                    borderRadius: '12px',
-                                    padding: '16px',
-                                    display: 'flex',
-                                    gap: '12px',
-                                    alignItems: 'center',
-                                    color: '#b45309'
-                                }}>
-                                    <AlertCircle size={20} style={{ flexShrink: 0 }} />
-                                    <div style={{ fontSize: '14px' }}>
-                                        <span style={{ fontWeight: 700, display: 'block' }}>กรุณาระบุรหัสสินค้าในหน้า "ข้อมูลทั่วไป" ก่อน</span>
-                                        <span style={{ opacity: 0.8 }}>ระบบจำเป็นต้องใช้รหัสสินค้าตั้งต้นในการคำนวณ SKU</span>
-                                    </div>
-                                </div>
-                            )}
+
 
                             <VariantManager
                                 variants={formData.variants || []}

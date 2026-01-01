@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    X,
-    Users2,
-    Sparkles,
-    Save,
-    Upload,
-    Trash2,
-    Image as ImageIcon
+  X,
+  Users2,
+  Sparkles,
+  Save,
+  Upload,
+  Trash2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { saveTeam } from '../../lib/v1/teamManager';
 import { showError, showSuccess } from '../../lib/sweetAlert';
@@ -14,179 +14,177 @@ import FormInput from '../common/FormInput';
 import { Team } from '../../types/personnel';
 
 interface TeamModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    team: Team | null;
-    onSaveSuccess: () => void;
+  isOpen: boolean;
+  onClose: () => void;
+  team: Team | null;
+  onSaveSuccess: () => void;
 }
 
 export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }: TeamModalProps) {
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState<Team>({
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<Team>({
+    id: undefined,
+    name: '',
+    team_type: 'ช่าง',
+    payment_qr_url: '',
+    status: 'active',
+    sort_order: 0
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (team) {
+      setFormData(team);
+      setPreviewUrl(team.payment_qr_url || null);
+    } else {
+      setFormData({
         id: undefined,
         name: '',
         team_type: 'ช่าง',
         payment_qr_url: '',
         status: 'active',
         sort_order: 0
-    });
+      });
+      setPreviewUrl(null);
+    }
+  }, [team]);
 
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const handleSave = async () => {
+    if (!formData.name) return showError('กรุณาระบุชื่อทีม');
+    setLoading(true);
+    const res = await saveTeam(formData);
+    if (res.success) {
+      showSuccess(formData.id ? 'แก้ไขข้อมูลทีมสำเร็จ' : 'สร้างทีมใหม่สำเร็จ');
+      onSaveSuccess();
+      onClose();
+    } else {
+      showError('เกิดข้อผิดพลาด: ' + res.error);
+    }
+    setLoading(false);
+  };
 
-    useEffect(() => {
-        if (team) {
-            setFormData(team);
-            setPreviewUrl(team.payment_qr_url || null);
-        } else {
-            setFormData({
-                id: undefined,
-                name: '',
-                team_type: 'ช่าง',
-                payment_qr_url: '',
-                status: 'active',
-                sort_order: 0
-            });
-            setPreviewUrl(null);
-        }
-    }, [team]);
+  if (!isOpen) return null;
 
-    const handleSave = async () => {
-        if (!formData.name) return showError('กรุณาระบุชื่อทีม');
-        setLoading(true);
-        const res = await saveTeam(formData);
-        if (res.success) {
-            showSuccess(formData.id ? 'แก้ไขข้อมูลทีมสำเร็จ' : 'สร้างทีมใหม่สำเร็จ');
-            onSaveSuccess();
-            onClose();
-        } else {
-            showError('เกิดข้อผิดพลาด: ' + res.error);
-        }
-        setLoading(false);
-    };
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        {/* Header */}
+        <div className="modal-header">
+          <div className="header-title">
+            <Users2 size={20} className="header-icon" />
+            <h2>{formData.id ? 'แก้ไขข้อมูลทีม' : 'สร้างทีมใหม่'}</h2>
+          </div>
+          <button onClick={onClose} className="close-btn"><X size={20} /></button>
+        </div>
 
-    if (!isOpen) return null;
-
-    return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                {/* Header */}
-                <div className="modal-header">
-                    <div className="header-title">
-                        <Users2 size={20} className="header-icon" />
-                        <h2>{formData.id ? 'แก้ไขข้อมูลทีม' : 'สร้างทีมใหม่'}</h2>
-                    </div>
-                    <button onClick={onClose} className="close-btn"><X size={20} /></button>
-                </div>
-
-                {/* Body */}
-                <div className="modal-body">
-                    <div className="form-grid">
-                        <div className="section-header">
-                            <Users2 size={18} color="var(--primary-500)" />
-                            <span>ข้อมูลทีม</span>
-                            <button className="magic-icon-btn"><Sparkles size={14} /></button>
-                        </div>
-
-                        <div className="input-group">
-                            <label>ชื่อทีม <span className="required">*</span></label>
-                            <FormInput
-                                placeholder="ระบุชื่อทีม (เช่น ทีมช่าง A)"
-                                value={formData.name}
-                                onChange={v => setFormData({ ...formData, name: v })}
-                                icon={Users2}
-                            />
-                        </div>
-
-                        <div className="field-row">
-                            <div className="input-group">
-                                <label>ประเภททีม</label>
-                                <select
-                                    className="select-field"
-                                    value={formData.team_type}
-                                    onChange={e => setFormData({ ...formData, team_type: e.target.value })}
-                                >
-                                    <option value="ช่าง">ช่าง</option>
-                                    <option value="QC">QC</option>
-                                    <option value="SALE">SALE</option>
-                                    <option value="บริหาร">บริหาร</option>
-                                </select>
-                            </div>
-                            <div className="input-group">
-                                <label>ลำดับการแสดงผล</label>
-                                <input
-                                    type="number"
-                                    className="input-field"
-                                    placeholder="0"
-                                    value={formData.sort_order}
-                                    onFocus={e => e.target.select()}
-                                    onChange={e => setFormData({ ...formData, sort_order: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="qr-section">
-                            <div className="section-header">
-                                <ImageIcon size={18} color="var(--primary-500)" />
-                                <span>QR Code รับเงิน</span>
-                            </div>
-                            <div
-                                className="qr-upload-area"
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                {previewUrl ? (
-                                    <img src={previewUrl} alt="QR Preview" className="qr-preview" />
-                                ) : (
-                                    <div className="upload-placeholder">
-                                        <Upload size={48} color="var(--text-muted)" strokeWidth={1.5} />
-                                        <span className="placeholder-title">อัปโหลด QR Code</span>
-                                        <span className="placeholder-desc">รองรับไฟล์ JPG, PNG</span>
-                                    </div>
-                                )}
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
-                                            setPreviewUrl(URL.createObjectURL(file));
-                                            // In a real app, you'd upload here and set the URL
-                                            setFormData({ ...formData, payment_qr_url: 'https://via.placeholder.com/150' }); // Mock
-                                        }
-                                    }}
-                                />
-                            </div>
-                            {previewUrl && (
-                                <div style={{ textAlign: 'right' }}>
-                                    <button
-                                        className="remove-qr-btn"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setPreviewUrl(null);
-                                            setFormData({ ...formData, payment_qr_url: '' });
-                                        }}
-                                    >
-                                        <Trash2 size={14} /> ลบรูปภาพ
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footer */}
-                <div className="modal-footer">
-                    <button className="secondary-btn" onClick={onClose}>ยกเลิก</button>
-                    <button className="button-primary" onClick={handleSave} disabled={loading}>
-                        <Save size={18} />
-                        {loading ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
-                    </button>
-                </div>
+        {/* Body */}
+        <div className="modal-body">
+          <div className="form-grid">
+            <div className="section-header">
+              <Users2 size={18} color="var(--primary-500)" />
+              <span>ข้อมูลทีม</span>
+              <button className="magic-icon-btn"><Sparkles size={14} /></button>
             </div>
 
-            <style jsx>{`
+            <div className="input-group">
+              <FormInput
+                label="ชื่อทีม (Required *)"
+                placeholder="ระบุชื่อทีม (เช่น ทีมช่าง A)"
+                value={formData.name}
+                onChange={v => setFormData({ ...formData, name: v })}
+                icon={Users2}
+              />
+            </div>
+
+            <div className="field-row">
+              <div className="input-group">
+                <label>ประเภททีม</label>
+                <select
+                  className="select-field"
+                  value={formData.team_type}
+                  onChange={e => setFormData({ ...formData, team_type: e.target.value })}
+                >
+                  <option value="ช่าง">ช่าง</option>
+                  <option value="QC">QC</option>
+                  <option value="SALE">SALE</option>
+                  <option value="บริหาร">บริหาร</option>
+                </select>
+              </div>
+              <div className="input-group">
+                <FormInput
+                  label="ลำดับการแสดงผล"
+                  type="number"
+                  placeholder="0"
+                  value={formData.sort_order}
+                  onChange={v => setFormData({ ...formData, sort_order: v === '' ? 0 : parseInt(v) })}
+                />
+              </div>
+            </div>
+
+            <div className="qr-section">
+              <div className="section-header">
+                <ImageIcon size={18} color="var(--primary-500)" />
+                <span>QR Code รับเงิน</span>
+              </div>
+              <div
+                className="qr-upload-area"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {previewUrl ? (
+                  <img src={previewUrl} alt="QR Preview" className="qr-preview" />
+                ) : (
+                  <div className="upload-placeholder">
+                    <Upload size={48} color="var(--text-muted)" strokeWidth={1.5} />
+                    <span className="placeholder-title">อัปโหลด QR Code</span>
+                    <span className="placeholder-desc">รองรับไฟล์ JPG, PNG</span>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setPreviewUrl(URL.createObjectURL(file));
+                      // In a real app, you'd upload here and set the URL
+                      setFormData({ ...formData, payment_qr_url: 'https://via.placeholder.com/150' }); // Mock
+                    }
+                  }}
+                />
+              </div>
+              {previewUrl && (
+                <div style={{ textAlign: 'right' }}>
+                  <button
+                    className="remove-qr-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewUrl(null);
+                      setFormData({ ...formData, payment_qr_url: '' });
+                    }}
+                  >
+                    <Trash2 size={14} /> ลบรูปภาพ
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="modal-footer">
+          <button className="secondary-btn" onClick={onClose}>ยกเลิก</button>
+          <button className="button-primary" onClick={handleSave} disabled={loading}>
+            <Save size={18} />
+            {loading ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
+          </button>
+        </div>
+      </div>
+
+      <style jsx>{`
         .modal-overlay {
           position: fixed;
           inset: 0;
@@ -435,6 +433,6 @@ export default function TeamModal({ isOpen, onClose, team, onSaveSuccess }: Team
         
         .hidden { display: none; }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

@@ -4,7 +4,11 @@ import {
     FileText,
     Briefcase,
     ShieldCheck,
-    Sparkles
+    Sparkles,
+    Phone,
+    Mail,
+    MessageCircle,
+    Facebook
 } from 'lucide-react';
 import DynamicSelect from '../../common/DynamicSelect';
 import FormInput from '../../common/FormInput';
@@ -75,6 +79,120 @@ export default function BasicInfoTab({
                             icon={User}
                         />
                     </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <FormInput
+                            label="เลขประจำตัวประชาชน"
+                            value={formData.citizen_id}
+                            onChange={v => setFormData(prev => ({ ...prev, citizen_id: v }))}
+                            placeholder="เลขประจำตัวประชาชน"
+                            icon={ShieldCheck}
+                        />
+                        <FormInput
+                            label="วันเกิด"
+                            type="date"
+                            value={formData.birth_date}
+                            onChange={v => setFormData(prev => ({ ...prev, birth_date: v }))}
+                            icon={FileText}
+                        />
+                    </div>
+
+                    {/* Contact Fields linked to Primary Contact */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <FormInput
+                            label="เบอร์โทรศัพท์"
+                            value={(() => {
+                                const primary = formData.contacts?.find((c: any) => c.is_primary) || formData.contacts?.[0];
+                                return primary?.phone || '';
+                            })()}
+                            onChange={v => {
+                                setFormData(prev => {
+                                    const contacts = [...(prev.contacts || [])];
+                                    const idx = contacts.findIndex((c: any) => c.is_primary);
+                                    if (idx >= 0) {
+                                        contacts[idx] = { ...contacts[idx], phone: v };
+                                    } else if (contacts.length > 0) {
+                                        contacts[0] = { ...contacts[0], phone: v, is_primary: true };
+                                    } else {
+                                        contacts.push({ id: Date.now(), name: 'Main', phone: v, is_primary: true } as any);
+                                    }
+                                    return { ...prev, contacts };
+                                });
+                            }}
+                            placeholder="08x-xxx-xxxx"
+                            icon={Phone}
+                        />
+                        <FormInput
+                            label="อีเมล"
+                            value={(() => {
+                                const primary = formData.contacts?.find((c: any) => c.is_primary) || formData.contacts?.[0];
+                                return primary?.email || '';
+                            })()}
+                            onChange={v => {
+                                setFormData(prev => {
+                                    const contacts = [...(prev.contacts || [])];
+                                    const idx = contacts.findIndex((c: any) => c.is_primary);
+                                    if (idx >= 0) {
+                                        contacts[idx] = { ...contacts[idx], email: v };
+                                    } else if (contacts.length > 0) {
+                                        contacts[0] = { ...contacts[0], email: v, is_primary: true };
+                                    } else {
+                                        contacts.push({ id: Date.now(), name: 'Main', email: v, is_primary: true } as any);
+                                    }
+                                    return { ...prev, contacts };
+                                });
+                            }}
+                            placeholder="email@example.com"
+                            icon={Mail}
+                        />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <FormInput
+                            label="Line ID"
+                            value={(() => {
+                                const primary = formData.contacts?.find((c: any) => c.is_primary) || formData.contacts?.[0];
+                                return primary?.line || '';
+                            })()}
+                            onChange={v => {
+                                setFormData(prev => {
+                                    const contacts = [...(prev.contacts || [])];
+                                    const idx = contacts.findIndex((c: any) => c.is_primary);
+                                    if (idx >= 0) {
+                                        contacts[idx] = { ...contacts[idx], line: v };
+                                    } else if (contacts.length > 0) {
+                                        contacts[0] = { ...contacts[0], line: v, is_primary: true };
+                                    } else {
+                                        contacts.push({ id: Date.now(), name: 'Main', line: v, is_primary: true } as any);
+                                    }
+                                    return { ...prev, contacts };
+                                });
+                            }}
+                            placeholder="Line ID"
+                            icon={MessageCircle}
+                        />
+                        <FormInput
+                            label="Facebook"
+                            value={(() => {
+                                const primary = formData.contacts?.find((c: any) => c.is_primary) || formData.contacts?.[0];
+                                return primary?.facebook || '';
+                            })()}
+                            onChange={v => {
+                                setFormData(prev => {
+                                    const contacts = [...(prev.contacts || [])];
+                                    const idx = contacts.findIndex((c: any) => c.is_primary);
+                                    if (idx >= 0) {
+                                        contacts[idx] = { ...contacts[idx], facebook: v };
+                                    } else if (contacts.length > 0) {
+                                        contacts[0] = { ...contacts[0], facebook: v, is_primary: true };
+                                    } else {
+                                        contacts.push({ id: Date.now(), name: 'Main', facebook: v, is_primary: true } as any);
+                                    }
+                                    return { ...prev, contacts };
+                                });
+                            }}
+                            placeholder="Facebook Profile"
+                            icon={Facebook}
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -112,24 +230,20 @@ export default function BasicInfoTab({
                         onAddItem={onAddNewTeam}
                     />
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div>
-                            <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '4px', display: 'block' }}>วันเริ่มงาน</label>
-                            <FormInput
-                                type="date"
-                                value={formData.start_date}
-                                onChange={v => setFormData(prev => ({ ...prev, start_date: v }))}
-                                icon={FileText}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '4px', display: 'block' }}>วันสิ้นสุด</label>
-                            <FormInput
-                                type="date"
-                                value={formData.end_date}
-                                onChange={v => setFormData(prev => ({ ...prev, end_date: v }))}
-                                icon={FileText}
-                            />
-                        </div>
+                        <FormInput
+                            label="วันเริ่มงาน"
+                            type="date"
+                            value={formData.start_date}
+                            onChange={v => setFormData(prev => ({ ...prev, start_date: v }))}
+                            icon={FileText}
+                        />
+                        <FormInput
+                            label="วันสิ้นสุด"
+                            type="date"
+                            value={formData.end_date}
+                            onChange={v => setFormData(prev => ({ ...prev, end_date: v }))}
+                            icon={FileText}
+                        />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                         <DynamicSelect
@@ -154,7 +268,7 @@ export default function BasicInfoTab({
                             label="อัตราค่าจ้าง"
                             placeholder="0.00"
                             value={formData.pay_rate}
-                            onChange={v => setFormData(prev => ({ ...prev, pay_rate: Number(v) || 0 }))}
+                            onChange={v => setFormData(prev => ({ ...prev, pay_rate: v === '' ? '' : v }))}
                             options={systemOptions.payRates || []}
                             onAddItem={v => onAddNewOption('payRates', v)}
                         />
@@ -162,7 +276,7 @@ export default function BasicInfoTab({
                             label="ค่าคอมมิชชัน (%)"
                             placeholder="Commission %"
                             value={formData.incentive_rate}
-                            onChange={v => setFormData(prev => ({ ...prev, incentive_rate: Number(v) || 0 }))}
+                            onChange={v => setFormData(prev => ({ ...prev, incentive_rate: v === '' ? '' : v }))}
                             options={systemOptions.incentiveRates || []}
                             onAddItem={v => onAddNewOption('incentiveRates', v)}
                         />
