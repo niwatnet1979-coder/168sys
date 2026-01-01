@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, Package, Plus, AlertCircle, Ruler, DollarSign, Boxes, Palette, Gem, Tag } from 'lucide-react';
+import { Trash2, Package, Plus, AlertCircle, Ruler, DollarSign, Boxes, Palette, Gem, Tag, Layers, FileText } from 'lucide-react';
 import { ProductVariant } from '../../types/product';
 import { useSystemOptions } from '../../../hooks/useSystemOptions';
 import DynamicSelect from '../../common/DynamicSelect';
@@ -25,6 +25,9 @@ interface VariantTabProps {
     setNewVariant: (v: NewVariantState) => void;
     getPreviewSKU: () => string;
     onCreateVariant: () => ProductVariant;
+    productName?: string;
+    productMaterial?: string;
+    productDescription?: string;
 }
 
 export default function VariantTab({
@@ -34,7 +37,10 @@ export default function VariantTab({
     newVariant,
     setNewVariant,
     getPreviewSKU,
-    onCreateVariant
+    onCreateVariant,
+    productName,
+    productMaterial,
+    productDescription
 }: VariantTabProps) {
     // Fetch Options from DB
     const { options: colorOptions } = useSystemOptions('materialColors');
@@ -118,47 +124,99 @@ export default function VariantTab({
                                 }}
                             >
                                 <div style={{
-                                    width: '48px',
-                                    height: '48px',
+                                    width: '80px',
+                                    height: '80px',
                                     background: '#f1f5f9',
                                     borderRadius: '10px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     flexShrink: 0,
-                                    border: '1px solid #e2e8f0'
+                                    border: '1px solid #e2e8f0',
+                                    overflow: 'hidden'
                                 }}>
                                     {v.image_url ? (
-                                        <img src={v.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px' }} />
+                                        <img src={v.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     ) : (
                                         <Package size={24} style={{ color: '#94a3b8' }} />
                                     )}
                                 </div>
 
-                                <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'center' }}>
-                                    <div>
-                                        <div style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', marginBottom: '2px' }}>SKU</div>
-                                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569', fontFamily: 'monospace' }}>
-                                            {productCode}-
-                                            {v.dimensions && (v.dimensions.length || v.dimensions.width || v.dimensions.height) ? `L${v.dimensions.length}W${v.dimensions.width}H${v.dimensions.height}` : ''}-
-                                            {parseCode(v.color)}
-                                            {v.crystal_color ? `-${parseCode(v.crystal_color)}` : ''}
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {/* Line 1: SKU */}
+                                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569', fontFamily: 'monospace' }}>
+                                        {`${productCode}-${v.dimensions && (v.dimensions.length || v.dimensions.width || v.dimensions.height) ? `L${v.dimensions.length}W${v.dimensions.width}H${v.dimensions.height}` : ''}-${parseCode(v.color)}${v.crystal_color ? `-${parseCode(v.crystal_color)}` : ''}`}
+                                    </div>
+
+                                    {/* Line 2: Product Name */}
+                                    <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>
+                                        {productName || '-'}
+                                    </div>
+
+                                    {/* Line 3: Specs with Icons */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', fontSize: '12px', color: '#64748b' }}>
+                                        {/* Dimensions */}
+                                        {(v.dimensions && (v.dimensions.length || v.dimensions.width || v.dimensions.height)) && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <span>{`L${v.dimensions.length}W${v.dimensions.width}H${v.dimensions.height}`}</span>
+                                            </div>
+                                        )}
+
+                                        {/* Material */}
+                                        {productMaterial && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Layers size={14} className="text-slate-400" />
+                                                <span>{productMaterial}</span>
+                                            </div>
+                                        )}
+
+                                        {/* Color (Strip GD) */}
+                                        {v.color && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Palette size={14} className="text-slate-400" />
+                                                <span>{v.color.replace(/GD/i, '').trim()}</span>
+                                            </div>
+                                        )}
+
+                                        {/* Crystal (Strip CL, use Gem) */}
+                                        {v.crystal_color && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Gem size={14} className="text-slate-400" />
+                                                <span>{v.crystal_color.replace(/CL/i, '').trim()}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Line 4: Description */}
+                                    {productDescription && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#64748b' }}>
+                                            <FileText size={14} className="text-slate-400" />
+                                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '400px' }}>
+                                                {productDescription}
+                                            </span>
                                         </div>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', marginBottom: '2px' }}>คุณสมบัติ</div>
-                                        <div style={{ fontSize: '13px', color: '#64748b' }}>
-                                            {v.color} {v.crystal_color ? `/ ${v.crystal_color}` : ''}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', marginBottom: '2px' }}>ราคา</div>
-                                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>฿{v.price.toLocaleString()}</div>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', marginBottom: '2px' }}>Min Stock</div>
-                                        <div style={{ fontSize: '13px', color: '#475569' }}>{v.min_stock_level}</div>
-                                    </div>
+                                    )}
+
+                                    {/* Line 5: Price and Stock (moved from separate columns to here or just keep them?) */}
+                                    {/* User request didn't explicitly say to remove Price/Stock but the screenshot doesn't show them clearly in the main block.
+                                        However, keeping them visible is crucial for a variant list.
+                                        Let's keep them in a separate block on the right, or integrated?
+                                        The user's screenshot seems to mostly show the text info. 
+                                        The price and actions were to the right in the original layout.
+                                        I will keep Price and Stock in a small row below or to the side if there is space?
+                                        The original used a grid.
+                                        I replaced the grid with flex column.
+                                        I should probably add Price/Stock back in a subtle way or check if I can keep the grid layout but merge the first column.
+                                        Actually, let's look at the screenshot again carefully. 
+                                        It shows a "List View" style.
+                                        Let's put Price and Min Stock on the right side using flex: space-between.
+                                    */}
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', minWidth: '100px' }}>
+                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>ราคา</div>
+                                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#475569' }}>฿{v.price.toLocaleString()}</div>
+                                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Min Stock: {v.min_stock_level}</div>
                                 </div>
 
                                 <button

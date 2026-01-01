@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Edit, Package, Box, Trash2, Tag, Layers, Palette, Sparkles, StickyNote, FileText, Image as ImageIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight, Edit, Package, Box, Trash2, Tag, Layers, Palette, Gem, StickyNote, FileText, Image as ImageIcon } from 'lucide-react';
 import { Product } from '../../types/product';
 import { Button } from '../../components/common/Button';
 import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, TableEmptyState } from '../../components/common/Table';
@@ -201,13 +201,13 @@ export default function ProductTable({ products, onEdit, onRefresh }: ProductTab
                                                                 {v.color && (
                                                                     <div className="flex items-center gap-1" title="สีวัสดุ">
                                                                         <Palette size={12} className="text-slate-400" />
-                                                                        <span>{v.color}</span>
+                                                                        <span>{v.color ? v.color.replace(/GD/i, '').trim() : ''}</span>
                                                                     </div>
                                                                 )}
                                                                 {v.crystal_color && (
                                                                     <div className="flex items-center gap-1" title="สีคริสตัล">
-                                                                        <Sparkles size={12} className="text-slate-400" />
-                                                                        <span>{v.crystal_color}</span>
+                                                                        <Gem size={12} className="text-slate-400" />
+                                                                        <span>{v.crystal_color.replace(/CL/i, '').trim()}</span>
                                                                     </div>
                                                                 )}
                                                             </div>

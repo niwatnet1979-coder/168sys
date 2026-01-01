@@ -300,6 +300,9 @@ export default function ProductModal({ isOpen, onClose, product = null, onSucces
                             setNewVariant={setNewVariant}
                             getPreviewSKU={getPreviewSKU}
                             onCreateVariant={createVariantObject}
+                            productName={formData.name}
+                            productMaterial={formData.material}
+                            productDescription={formData.description}
                         />
                     )}
                 </div>
