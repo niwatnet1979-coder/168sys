@@ -8,70 +8,67 @@ import MultiImageUploader from '../../common/MultiImageUploader';
 import AddItemButton from '../../common/AddItemButton';
 import { Image as ImageIcon } from 'lucide-react';
 
+interface NewVariantState {
+    color: string;
+    crystal_color: string;
+    dimensions: { length: string; width: string; height: string };
+    price: string;
+    min_stock_level: number;
+    image_urls: string[];
+}
+
 interface VariantTabProps {
     variants: ProductVariant[];
     setVariants: (variants: ProductVariant[]) => void;
     productCode: string;
+    newVariant: NewVariantState;
+    setNewVariant: (v: NewVariantState) => void;
+    getPreviewSKU: () => string;
+    onCreateVariant: () => ProductVariant;
 }
 
-export default function VariantTab({ variants, setVariants, productCode }: VariantTabProps) {
+export default function VariantTab({
+    variants,
+    setVariants,
+    productCode,
+    newVariant,
+    setNewVariant,
+    getPreviewSKU,
+    onCreateVariant
+}: VariantTabProps) {
     // Fetch Options from DB
     const { options: colorOptions } = useSystemOptions('materialColors');
     const { options: crystalOptions } = useSystemOptions('crystalColors');
 
-    // Local state for the "Add New Variant" form
-    const [newVariant, setNewVariant] = useState<{
-        color: string;
-        crystal_color: string;
-        dimensions: { length: string; width: string; height: string };
-        price: string;
-        min_stock_level: number;
-        image_urls: string[];
-    }>({
-        color: '',
-        crystal_color: '',
-        dimensions: { length: '', width: '', height: '' },
-        price: '',
-        min_stock_level: 0,
-        image_urls: ['']
-    });
+    // Internal state REMOVED - using props 'newVariant' and 'setNewVariant'
 
     const parseCode = (val: string) => val ? val.split(' ')[0] : '';
 
-    const getPreviewSKU = () => {
-        if (!productCode) return 'กรุณาระบุรหัสสินค้าก่อน';
-        let sku = productCode;
-
-        const { length, width, height } = newVariant.dimensions;
-        if (length || width || height) {
-            sku += `-L${length || 0}W${width || 0}H${height || 0}`;
-        }
-
-        if (newVariant.color) sku += `-${parseCode(newVariant.color)}`;
-        if (newVariant.crystal_color) sku += `-${parseCode(newVariant.crystal_color)}`;
-
-        return sku;
-    };
-
     const handleAdd = () => {
-        // Validate
-        if (!productCode) return;
-        if (!newVariant.color && !newVariant.dimensions.length && !newVariant.dimensions.width && !newVariant.dimensions.height) {
+        // Validate product code
+        if (!productCode) {
+            alert('กรุณาบันทึกสินค้าก่อน');
             return;
         }
 
-        // Add to list
-        const variantToAdd: ProductVariant = {
-            sku: '',
-            color: newVariant.color,
-            crystal_color: newVariant.crystal_color,
-            dimensions: newVariant.dimensions,
-            price: parseFloat(newVariant.price) || 0,
-            min_stock_level: newVariant.min_stock_level,
-            image_url: newVariant.image_urls.filter(u => u).join(',') // Join multiple URLs
-        };
+        // Validate - need at least color OR one dimension
+        const hasColor = !!newVariant.color;
+        const hasLength = !!newVariant.dimensions.length && newVariant.dimensions.length !== '0';
+        const hasWidth = !!newVariant.dimensions.width && newVariant.dimensions.width !== '0';
+        const hasHeight = !!newVariant.dimensions.height && newVariant.dimensions.height !== '0';
 
-        setVariants([...variants, variantToAdd]);
+        if (!hasColor && !hasLength && !hasWidth && !hasHeight) {
+            alert('ต้องระบุ สีวัสดุ หรือ ขนาด (L/W/H) อย่างน้อย 1 อย่าง');
+            return;
+        }
+
+        // Add to list using the function from parent
+        const variantToAdd = onCreateVariant();
+
+        console.log('Adding variant:', variantToAdd);
+        const newVariants = [...variants, variantToAdd];
+        console.log('New variants list:', newVariants);
+        setVariants(newVariants);
 
         // Reset form
         setNewVariant({
@@ -82,6 +79,11 @@ export default function VariantTab({ variants, setVariants, productCode }: Varia
             min_stock_level: 0,
             image_urls: ['']
         });
+
+        // alert(`เพิ่ม Variant: ${variantToAdd.sku} สำเร็จ!`); 
+        // Commented out alert to be less intrusive, or keep it? User might like confirmation.
+        // But UX request was "record with same button", so manual add might still want feedback.
+        // Let's use Swal or just keep simple alert for now.
     };
 
     const removeVariant = (index: number) => {
@@ -191,10 +193,32 @@ export default function VariantTab({ variants, setVariants, productCode }: Varia
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {/* Section: ข้อมูลตัวเลือกสินค้า */}
-                    {/* Section: ข้อมูลตัวเลือกสินค้า */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-                        {/* Row 1: ขนาดสินค้า */}
+                        {/* Row 1: Variant ID + ราคาขาย (ย้ายมาบนสุด) */}
+                        <div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                {/* Variant ID (SKU Preview) - Readonly */}
+                                <FormInput
+                                    label="Variant ID"
+                                    placeholder="auto-generate"
+                                    value={getPreviewSKU()}
+                                    onChange={() => { }} // Readonly
+                                    icon={Tag}
+                                    disabled
+                                />
+                                <FormInput
+                                    label="ราคาขาย"
+                                    placeholder="0.00"
+                                    value={newVariant.price}
+                                    onChange={v => setNewVariant({ ...newVariant, price: v })}
+                                    icon={DollarSign}
+                                    type="number"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Row 2: ขนาดสินค้า (L/W/H) */}
                         <div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                                 <FormInput
@@ -224,9 +248,9 @@ export default function VariantTab({ variants, setVariants, productCode }: Varia
                             </div>
                         </div>
 
-                        {/* Row 2: สีและคุณสมบัติ */}
+                        {/* Row 3: สีวัสดุ + สีคริสตัล + Min Stock */}
                         <div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                                 <DynamicSelect
                                     label="สีวัสดุ"
                                     placeholder="เลือกสีวัสดุ..."
@@ -243,20 +267,6 @@ export default function VariantTab({ variants, setVariants, productCode }: Varia
                                     options={crystalOptions}
                                     onAddItem={(v) => console.log('Add crystal:', v)}
                                 />
-                            </div>
-                        </div>
-
-                        {/* Row 3: ราคาและสต็อก */}
-                        <div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                <FormInput
-                                    label="ราคาขาย"
-                                    placeholder="0.00"
-                                    value={newVariant.price}
-                                    onChange={v => setNewVariant({ ...newVariant, price: v })}
-                                    icon={DollarSign}
-                                    type="number"
-                                />
                                 <FormInput
                                     label="Min Stock Level"
                                     placeholder="0"
@@ -269,7 +279,6 @@ export default function VariantTab({ variants, setVariants, productCode }: Varia
                         </div>
                     </div>
 
-                    {/* Section: รูปภาพ */}
                     {/* Section: รูปภาพ */}
                     <MultiImageUploader
                         images={newVariant.image_urls}

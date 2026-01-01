@@ -96,7 +96,7 @@ export default function GeneralInfoTab({
             {/* Section: รูปภาพสินค้า */}
             <MultiImageUploader
                 images={formData.image_url ? formData.image_url.split(',') : ['']}
-                onChange={(urls) => setFormData(prev => ({ ...prev, image_url: urls.filter(u => u).join(',') }))}
+                onChange={(urls) => setFormData(prev => ({ ...prev, image_url: urls.join(',') }))}
                 title="รูปภาพสินค้า"
                 placeholder="คลิกเพื่ออัปโหลดรูปภาพสินค้า"
             />

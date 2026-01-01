@@ -66,8 +66,8 @@ export default function MultiImageUploader({
                                 onClick={() => handleRemoveImage(idx)}
                                 style={{
                                     position: 'absolute',
-                                    top: imageList.length > 1 ? '24px' : '8px',
-                                    right: '8px',
+                                    top: '30px',
+                                    right: '5px',
                                     width: '24px',
                                     height: '24px',
                                     borderRadius: '50%',

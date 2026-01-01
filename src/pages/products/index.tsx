@@ -74,6 +74,7 @@ export default function ProductsPage() {
                         <ProductTable
                             products={filteredProducts}
                             onEdit={handleEdit}
+                            onRefresh={refetch}
                         />
                     )}
                 </div>

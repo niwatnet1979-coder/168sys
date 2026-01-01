@@ -24,9 +24,33 @@ export const useProductForm = (initialData: Product | null = null) => {
 
   const [loading, setLoading] = useState(false);
 
+  // Helper to parse size string (e.g. "L20W20H30") to dimensions object
+  const parseSizeString = (size: string | undefined): { length: string; width: string; height: string } => {
+    if (!size) return { length: '', width: '', height: '' };
+    const match = size.match(/L(\d+)W(\d+)H(\d+)/i);
+    if (match) {
+      return { length: match[1], width: match[2], height: match[3] };
+    }
+    return { length: '', width: '', height: '' };
+  };
+
+  // Transform DB variants to form variants (size string → dimensions object)
+  const transformVariantsFromDB = (dbVariants: ProductVariant[] | undefined): ProductVariant[] => {
+    if (!dbVariants || !Array.isArray(dbVariants)) return [];
+
+    return dbVariants.map(v => ({
+      ...v,
+      dimensions: v.dimensions || parseSizeString(v.size)
+    }));
+  };
+
   // Initialize form data
   useEffect(() => {
     if (initialData) {
+      console.log('Loading product data:', initialData);
+      const transformedVariants = transformVariantsFromDB(initialData.variants);
+      console.log('Transformed variants:', transformedVariants);
+
       setFormData({
         uuid: initialData.uuid,
         product_code: initialData.product_code || '',
@@ -35,7 +59,7 @@ export const useProductForm = (initialData: Product | null = null) => {
         description: initialData.description || '',
         material: initialData.material || '',
         image_url: initialData.image_url || '',
-        variants: initialData.variants || []
+        variants: transformedVariants
       });
     } else {
       setFormData({
@@ -123,7 +147,7 @@ export const useProductForm = (initialData: Product | null = null) => {
     return sku;
   };
 
-  const saveProduct = async () => {
+  const saveProduct = async (variantsOverride?: ProductVariant[]) => {
     setLoading(true);
     try {
       if (!formData.product_code) throw new Error('กรุณาระบุรหัสสินค้า');
@@ -172,8 +196,14 @@ export const useProductForm = (initialData: Product | null = null) => {
       }
 
       // 2. Prepare Variants Payload
-      if (formData.variants && formData.variants.length > 0) {
-        const variantsPayload = formData.variants.map(v => ({
+      const finalVariants = variantsOverride || formData.variants;
+
+      console.log('=== SAVING VARIANTS ===');
+      console.log('finalVariants:', finalVariants);
+      console.log('variants count:', finalVariants?.length || 0);
+
+      if (finalVariants && finalVariants.length > 0) {
+        const variantsPayload = finalVariants.map(v => ({
           product_id: productId,
           sku: generateSKU(v, formData.product_code), // Ensure SKU is fresh
           color: v.color,
@@ -186,17 +216,24 @@ export const useProductForm = (initialData: Product | null = null) => {
           updated_by: 'System'
         }));
 
+        console.log('variantsPayload to insert:', variantsPayload);
+
         // Delete old and Insert new strategy
         const { error: deleteError } = await supabase.from('product_variants').delete().eq('product_id', productId);
+        console.log('Delete old variants result:', deleteError || 'OK');
+
         if (deleteError) {
           console.warn("Cannot delete old variants:", deleteError);
           const { error: upsertError } = await supabase.from('product_variants').upsert(variantsPayload, { onConflict: 'sku' });
+          console.log('Upsert result:', upsertError || 'OK');
           if (upsertError) throw upsertError;
         } else {
-          const { error: insertError } = await supabase.from('product_variants').insert(variantsPayload);
+          const { data: insertData, error: insertError } = await supabase.from('product_variants').insert(variantsPayload).select();
+          console.log('Insert result:', insertError || 'OK', insertData);
           if (insertError) throw insertError;
         }
       } else {
+        console.log('No variants to save, clearing old ones');
         // No variants, ensure cleared
         await supabase.from('product_variants').delete().eq('product_id', productId);
       }

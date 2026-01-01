@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Package, Sparkles, Box, Tag, Save } from 'lucide-react';
 import { useProductForm } from '../../hooks/useProductForm';
 import { useSystemOptions } from '../../hooks/useSystemOptions';
-import { Product } from '../../types/product';
+import { Product, ProductVariant } from '../../types/product';
 import GeneralInfoTab from './tabs/GeneralInfoTab';
 import VariantTab from './tabs/VariantTab';
 
@@ -19,19 +19,122 @@ export default function ProductModal({ isOpen, onClose, product = null, onSucces
     const { options: categoryOptions, loading: loadingCategories, addOption: addCategory } = useSystemOptions('productTypes');
     const [activeTab, setActiveTab] = useState<'general' | 'variants'>('general');
 
-    if (!isOpen) return null;
+    const [newVariant, setNewVariant] = useState<{
+        color: string;
+        crystal_color: string;
+        dimensions: { length: string; width: string; height: string };
+        price: string;
+        min_stock_level: number;
+        image_urls: string[];
+    }>({
+        color: '',
+        crystal_color: '',
+        dimensions: { length: '', width: '', height: '' },
+        price: '',
+        min_stock_level: 0,
+        image_urls: ['']
+    });
+
+    // Helper functions for Variant Logic
+    const getPreviewSKU = (variantData = newVariant) => {
+        if (!formData.product_code) return 'กรุณาระบุรหัสสินค้าก่อน';
+
+        let sku = formData.product_code;
+
+        // Add Size
+        if (variantData.dimensions.length && variantData.dimensions.width && variantData.dimensions.height) {
+            sku += `-L${variantData.dimensions.length}W${variantData.dimensions.width}H${variantData.dimensions.height}`;
+        }
+
+        // Helper to parse code from "Code Name" format
+        const parseCode = (val: string) => {
+            if (!val) return '';
+            const parts = val.split(' ');
+            return parts[0] || '';
+        };
+
+        // Add Color Code
+        if (variantData.color) {
+            const colorCode = parseCode(variantData.color);
+            if (colorCode) sku += `-${colorCode}`;
+        }
+
+        // Add Crystal Color Code
+        if (variantData.crystal_color) {
+            const cryColorCode = parseCode(variantData.crystal_color);
+            if (cryColorCode) sku += `-${cryColorCode}`;
+        }
+
+        return sku;
+    };
+
+    const hasPendingVariant = () => {
+        return (
+            newVariant.dimensions.length !== '' ||
+            newVariant.dimensions.width !== '' ||
+            newVariant.dimensions.height !== '' ||
+            newVariant.color !== '' ||
+            newVariant.crystal_color !== '' ||
+            newVariant.price !== ''
+        );
+    };
+
+    const createVariantObject = (): ProductVariant => {
+        return {
+            id: crypto.randomUUID(), // Temporary ID
+            product_id: product?.uuid || '',
+            sku: getPreviewSKU(),
+            color: newVariant.color,
+            crystal_color: newVariant.crystal_color,
+            dimensions: newVariant.dimensions,
+            price: parseFloat(newVariant.price) || 0,
+            min_stock_level: newVariant.min_stock_level,
+            image_url: newVariant.image_urls.filter(u => u).join(',') // Join multiple URLs
+        };
+    };
 
     const handleSubmit = async () => {
-        const success = await saveProduct();
+        let variantsToSave = [...(formData.variants || [])];
+
+        // Check if there is a pending variant in the form
+        if (activeTab === 'variants' && hasPendingVariant()) {
+            // Validate pending variant
+            const isDimensionsIncomplete = !newVariant.dimensions.length || !newVariant.dimensions.width || !newVariant.dimensions.height;
+            const isColorMissing = !newVariant.color && !newVariant.crystal_color;
+
+            // Only auto-add if it has enough info, otherwise warn or ignore?
+            // User requested "save variant with the same button".
+            // If data is incomplete, we should probably warn them OR just try to add and let validation fail if strict.
+            // But let's be smart: if they typed *something*, try to save it.
+
+            if (isDimensionsIncomplete && isColorMissing) {
+                // If missing basic info, maybe just ask confirmation?
+                // For now, let's assume if they filled anything, they want to save it.
+            } else {
+                const pendingVariant = createVariantObject();
+                console.log('Auto-adding pending variant:', pendingVariant);
+                variantsToSave.push(pendingVariant);
+
+                // Update local state to reflect UI immediately (optional, but good for feedback)
+                setFormData(prev => ({ ...prev, variants: variantsToSave }));
+
+                // Clear form
+                setNewVariant({ color: '', crystal_color: '', dimensions: { length: '', width: '', height: '' }, price: '', min_stock_level: 0, image_urls: [''] });
+            }
+        }
+
+        const success = await saveProduct(variantsToSave);
         if (success) {
             if (onSuccess) onSuccess();
             onClose();
         }
     };
 
+    if (!isOpen) return null;
+
     const tabs = [
         { id: 'general', label: 'ข้อมูลทั่วไป', icon: Box },
-        { id: 'variants', label: `ตัวเลือกสินค้า (${formData.variants?.length || 0})`, icon: Tag }
+        { id: 'variants', label: `ตัวเลือกสินค้า (${formData.variants?.length || 0}${hasPendingVariant() ? ' +1' : ''})`, icon: Tag }
     ] as const;
 
     return (
@@ -192,6 +295,11 @@ export default function ProductModal({ isOpen, onClose, product = null, onSucces
                             variants={formData.variants || []}
                             setVariants={(newVars) => setFormData(prev => ({ ...prev, variants: newVars }))}
                             productCode={formData.product_code}
+                            // Pass down lifted state
+                            newVariant={newVariant}
+                            setNewVariant={setNewVariant}
+                            getPreviewSKU={getPreviewSKU}
+                            onCreateVariant={createVariantObject}
                         />
                     )}
                 </div>
@@ -228,7 +336,9 @@ export default function ProductModal({ isOpen, onClose, product = null, onSucces
                         style={{ flex: 2, padding: '14px', justifyContent: 'center' }}
                     >
                         {loading ? <span style={{ width: '20px', height: '20px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> : <Save size={20} />}
-                        <span>{loading ? 'กำลังบันทึก...' : 'บันทึกสินค้า'}</span>
+                        <span>{loading ? 'กำลังบันทึก...' :
+                            (activeTab === 'variants' && hasPendingVariant()) ? '+ เพิ่มและบันทึก' : 'บันทึกสินค้า'
+                        }</span>
                     </button>
                 </div>
             </div>

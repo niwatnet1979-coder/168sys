@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
-import { Upload, Image as ImageIcon, X } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Image as ImageIcon, Loader2 } from 'lucide-react';
+import { uploadImageToStorage, isBlobUrl } from '../../lib/storageService';
 
 interface ImageUploaderProps {
     imageUrl: string;
@@ -8,11 +9,13 @@ interface ImageUploaderProps {
     placeholder?: string;
     accept?: string;
     maxHeight?: string;
+    bucket?: string;
+    folder?: string;
 }
 
 /**
- * ImageUploader - Reusable image upload component
- * Adapted from DocumentTab upload pattern for use in ProductModal and VariantManager.
+ * ImageUploader - Reusable image upload component with Supabase Storage integration
+ * Uploads images directly to Supabase Storage and returns permanent URLs.
  */
 export default function ImageUploader({
     imageUrl,
@@ -20,23 +23,39 @@ export default function ImageUploader({
     label = 'รูปภาพสินค้า',
     placeholder = 'คลิกเพื่ออัปโหลดรูปภาพ',
     accept = 'image/*',
-    maxHeight = '180px'
+    maxHeight = '180px',
+    bucket = 'product-images',
+    folder = ''
 }: ImageUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState('');
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const fileUrl = URL.createObjectURL(file);
-            onImageChange(fileUrl, file);
-        }
-    };
+        if (!file) return;
 
-    const handleClear = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onImageChange('');
-        if (inputRef.current) {
-            inputRef.current.value = '';
+        // Show preview immediately
+        const previewUrl = URL.createObjectURL(file);
+        onImageChange(previewUrl, file);
+
+        // Start upload to Supabase Storage
+        setIsUploading(true);
+        setUploadProgress('กำลังอัปโหลด...');
+
+        try {
+            const permanentUrl = await uploadImageToStorage(file, bucket, folder);
+            onImageChange(permanentUrl);
+            setUploadProgress('อัปโหลดสำเร็จ!');
+
+            // Clear progress after 2 seconds
+            setTimeout(() => setUploadProgress(''), 2000);
+        } catch (error: any) {
+            console.error('Upload failed:', error);
+            setUploadProgress(`อัปโหลดไม่สำเร็จ: ${error.message}`);
+            // Keep the blob preview so user can see what they selected
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -52,24 +71,27 @@ export default function ImageUploader({
                 </label>
             )}
             <div
-                onClick={() => inputRef.current?.click()}
+                onClick={() => !isUploading && inputRef.current?.click()}
                 style={{
                     border: '2px dashed #e2e8f0',
                     borderRadius: '16px',
                     padding: '20px',
                     textAlign: 'center',
-                    cursor: 'pointer',
+                    cursor: isUploading ? 'wait' : 'pointer',
                     background: imageUrl ? '#f8fafc' : 'white',
                     transition: 'all 0.2s',
                     position: 'relative',
                     minHeight: '120px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    opacity: isUploading ? 0.7 : 1
                 }}
                 onMouseOver={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--primary-300)';
-                    e.currentTarget.style.background = '#fafaff';
+                    if (!isUploading) {
+                        e.currentTarget.style.borderColor = 'var(--primary-300)';
+                        e.currentTarget.style.background = '#fafaff';
+                    }
                 }}
                 onMouseOut={(e) => {
                     e.currentTarget.style.borderColor = '#e2e8f0';
@@ -77,7 +99,7 @@ export default function ImageUploader({
                 }}
             >
                 {imageUrl && isValidImageUrl(imageUrl) ? (
-                    <>
+                    <div style={{ position: 'relative' }}>
                         <img
                             src={imageUrl}
                             alt="Preview"
@@ -88,28 +110,47 @@ export default function ImageUploader({
                                 objectFit: 'contain'
                             }}
                         />
-                        <button
-                            onClick={handleClear}
-                            style={{
+                        {/* Upload status indicator */}
+                        {(isUploading || uploadProgress) && (
+                            <div style={{
                                 position: 'absolute',
-                                top: '8px',
-                                right: '8px',
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '50%',
-                                border: 'none',
-                                background: 'rgba(0,0,0,0.5)',
+                                bottom: '8px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                backgroundColor: isUploading ? 'var(--primary-600)' :
+                                    uploadProgress.includes('สำเร็จ') ? '#16a34a' : '#dc2626',
                                 color: 'white',
-                                cursor: 'pointer',
+                                padding: '4px 12px',
+                                borderRadius: '20px',
+                                fontSize: '11px',
+                                fontWeight: 600,
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                            title="ลบรูป"
-                        >
-                            <X size={14} />
-                        </button>
-                    </>
+                                gap: '6px',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                {isUploading && <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />}
+                                {uploadProgress || 'กำลังอัปโหลด...'}
+                            </div>
+                        )}
+                        {/* Blob URL indicator */}
+                        {isBlobUrl(imageUrl) && !isUploading && !uploadProgress && (
+                            <div style={{
+                                position: 'absolute',
+                                bottom: '8px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                backgroundColor: '#f59e0b',
+                                color: 'white',
+                                padding: '4px 12px',
+                                borderRadius: '20px',
+                                fontSize: '11px',
+                                fontWeight: 600
+                            }}>
+                                ⚠️ ยังไม่ได้อัปโหลด
+                            </div>
+                        )}
+                    </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', color: '#94a3b8' }}>
                         <div style={{
@@ -138,8 +179,15 @@ export default function ImageUploader({
                     accept={accept}
                     onChange={handleFileSelect}
                     title="เลือกรูปภาพ"
+                    disabled={isUploading}
                 />
             </div>
+
+            <style>{`
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 }

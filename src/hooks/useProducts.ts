@@ -18,6 +18,7 @@ export const useProducts = () => {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
+            console.log('Products data from Supabase:', data);
             setProducts(data || []);
         } catch (err) {
             console.error('Error fetching products:', err);
