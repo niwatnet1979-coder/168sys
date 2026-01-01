@@ -72,8 +72,8 @@ export default function ProductTable({ products, onEdit, onRefresh }: ProductTab
                     <Tr>
                         <Th style={{ width: '50px' }}></Th>
                         <Th style={{ width: '100px' }}></Th>
-                        <Th style={{ width: '55%', paddingLeft: '16px' }}>สินค้า</Th>
-                        <Th style={{ width: '15%' }} align="left">จำนวน Variant</Th>
+                        <Th style={{ width: '35%', paddingLeft: '16px' }}>สินค้า</Th>
+                        <Th style={{ width: '35%', paddingLeft: '8px' }} align="left">จำนวน Variant</Th>
                         <Th align="center">Action</Th>
                     </Tr>
                 </Thead>
@@ -111,7 +111,7 @@ export default function ProductTable({ products, onEdit, onRefresh }: ProductTab
                                                 )}
                                             </div>
                                         </Td>
-                                        <Td style={{ width: '55%', paddingLeft: '16px' }}>
+                                        <Td style={{ width: '35%', paddingLeft: '16px' }}>
                                             <div className="flex flex-col gap-1">
                                                 <div className="font-bold text-slate-700 text-sm">{product.product_code}</div>
                                                 <div className="text-sm text-slate-600">{product.name}</div>
@@ -123,7 +123,7 @@ export default function ProductTable({ products, onEdit, onRefresh }: ProductTab
                                                 )}
                                             </div>
                                         </Td>
-                                        <Td style={{ width: '15%' }} align="left">
+                                        <Td style={{ width: '35%', paddingLeft: '8px' }} align="left">
                                             <span className="text-sm font-medium text-slate-700">{variantCount} รายการ</span>
                                         </Td>
                                         <Td align="center">
@@ -155,7 +155,7 @@ export default function ProductTable({ products, onEdit, onRefresh }: ProductTab
                                                 <Td></Td>
                                                 <Td></Td>
                                                 <Td style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 600, color: '#64748b' }}>VARIANT SKU</Td>
-                                                <Td style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 600, color: '#64748b' }} align="left">ราคา</Td>
+                                                <Td style={{ padding: '8px 8px', fontSize: '11px', fontWeight: 600, color: '#64748b' }} align="left">ราคา</Td>
                                                 <Td style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 600, color: '#64748b' }} align="center">Stock</Td>
                                             </Tr>
 
@@ -175,7 +175,7 @@ export default function ProductTable({ products, onEdit, onRefresh }: ProductTab
                                                     </Td>
 
                                                     {/* Variant Details - Aligned with Main Product Details */}
-                                                    <Td style={{ width: '55%', padding: '16px' }}>
+                                                    <Td style={{ width: '35%', padding: '16px' }}>
                                                         <div className="flex flex-col gap-1.5 min-h-[60px]">
                                                             <div className="font-bold text-slate-800 text-sm font-mono tracking-wide">{v.sku}</div>
                                                             <div className="text-sm text-slate-600 font-medium">{product.name}</div>
@@ -223,7 +223,7 @@ export default function ProductTable({ products, onEdit, onRefresh }: ProductTab
                                                     </Td>
 
                                                     {/* Price Column */}
-                                                    <Td align="left" style={{ width: '15%', padding: '16px', fontSize: '13px', fontWeight: 600, color: '#334155' }}>
+                                                    <Td align="left" style={{ width: '35%', padding: '16px 8px', fontSize: '13px', fontWeight: 600, color: '#334155' }}>
                                                         ฿{v.price?.toLocaleString()}
                                                     </Td>
 
