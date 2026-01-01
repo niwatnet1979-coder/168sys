@@ -42,6 +42,9 @@ export default function VariantTab({
     productMaterial,
     productDescription
 }: VariantTabProps) {
+    // Internal state for editing
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
     // Fetch Options from DB
     const { options: colorOptions } = useSystemOptions('materialColors');
     const { options: crystalOptions } = useSystemOptions('crystalColors');
@@ -50,7 +53,7 @@ export default function VariantTab({
 
     const parseCode = (val: string) => val ? val.split(' ')[0] : '';
 
-    const handleAdd = () => {
+    const handleSave = () => {
         // Validate product code
         if (!productCode) {
             alert('กรุณาบันทึกสินค้าก่อน');
@@ -68,13 +71,27 @@ export default function VariantTab({
             return;
         }
 
-        // Add to list using the function from parent
-        const variantToAdd = onCreateVariant();
+        // Create variant object from form data
+        const variantData = onCreateVariant();
 
-        console.log('Adding variant:', variantToAdd);
-        const newVariants = [...variants, variantToAdd];
-        console.log('New variants list:', newVariants);
-        setVariants(newVariants);
+        if (editingIndex !== null) {
+            // Update existing variant
+            const originalVariant = variants[editingIndex];
+            const updatedVariant = {
+                ...variantData,
+                id: originalVariant.id, // Preserve ID
+                created_at: originalVariant.created_at,
+            };
+
+            const newVariants = [...variants];
+            newVariants[editingIndex] = updatedVariant;
+            setVariants(newVariants);
+            setEditingIndex(null);
+        } else {
+            // Add new variant
+            const newVariants = [...variants, variantData];
+            setVariants(newVariants);
+        }
 
         // Reset form
         setNewVariant({
@@ -85,11 +102,35 @@ export default function VariantTab({
             min_stock_level: 0,
             image_urls: ['']
         });
+    };
 
-        // alert(`เพิ่ม Variant: ${variantToAdd.sku} สำเร็จ!`); 
-        // Commented out alert to be less intrusive, or keep it? User might like confirmation.
-        // But UX request was "record with same button", so manual add might still want feedback.
-        // Let's use Swal or just keep simple alert for now.
+    const startEdit = (index: number) => {
+        const v = variants[index];
+        setNewVariant({
+            color: v.color || '',
+            crystal_color: v.crystal_color || '',
+            dimensions: {
+                length: String(v.dimensions?.length || ''),
+                width: String(v.dimensions?.width || ''),
+                height: String(v.dimensions?.height || '')
+            },
+            price: String(v.price || ''),
+            min_stock_level: v.min_stock_level || 0,
+            image_urls: v.image_url ? [v.image_url] : []
+        });
+        setEditingIndex(index);
+    };
+
+    const cancelEdit = () => {
+        setEditingIndex(null);
+        setNewVariant({
+            color: '',
+            crystal_color: '',
+            dimensions: { length: '', width: '', height: '' },
+            price: '',
+            min_stock_level: 0,
+            image_urls: ['']
+        });
     };
 
     const removeVariant = (index: number) => {
@@ -221,14 +262,15 @@ export default function VariantTab({
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <button
-                                        onClick={() => { /* TODO: Implement Edit Logic */ }}
+                                        onClick={() => startEdit(idx)}
                                         style={{
                                             padding: '8px',
                                             background: 'none',
                                             border: 'none',
                                             borderRadius: '8px',
-                                            color: '#94a3b8',
-                                            cursor: 'pointer'
+                                            color: editingIndex === idx ? '#3b82f6' : '#94a3b8',
+                                            cursor: 'pointer',
+                                            backgroundColor: editingIndex === idx ? '#eff6ff' : 'transparent'
                                         }}
                                         className="hover:text-blue-500 transition-colors"
                                         title="แก้ไขข้อมูล"
@@ -262,8 +304,17 @@ export default function VariantTab({
             {/* Add New Variant Section */}
             <div className="card" style={{ padding: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                    <Plus size={18} style={{ color: 'var(--primary-500)' }} />
-                    <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569' }}>เพิ่มตัวเลือกสินค้า (New Variant)</span>
+                    {editingIndex !== null ? (
+                        <>
+                            <Settings size={18} style={{ color: 'var(--primary-500)' }} />
+                            <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569' }}>แก้ไขตัวเลือกสินค้า (Edit Variant)</span>
+                        </>
+                    ) : (
+                        <>
+                            <Plus size={18} style={{ color: 'var(--primary-500)' }} />
+                            <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569' }}>เพิ่มตัวเลือกสินค้า (New Variant)</span>
+                        </>
+                    )}
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -362,11 +413,33 @@ export default function VariantTab({
                         placeholder="คลิกเพื่ออัปโหลดรูปภาพตัวเลือก"
                     />
 
-                    {/* Add Button */}
-                    <AddItemButton
-                        onClick={handleAdd}
-                        label="เพิ่มรายการ"
-                    />
+                    {/* Buttons */}
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <div style={{ flex: 1 }}>
+                            <AddItemButton
+                                onClick={handleSave}
+                                label={editingIndex !== null ? "บันทึกการแก้ไข" : "เพิ่มรายการ"}
+                            />
+                        </div>
+                        {editingIndex !== null && (
+                            <button
+                                onClick={cancelEdit}
+                                style={{
+                                    padding: '0 24px',
+                                    height: '40px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e2e8f0',
+                                    background: '#fff',
+                                    color: '#64748b',
+                                    fontWeight: 500,
+                                    cursor: 'pointer'
+                                }}
+                                className="hover:bg-slate-50 transition-colors"
+                            >
+                                ยกเลิก
+                            </button>
+                        )}
+                    </div>
 
 
                 </div>
